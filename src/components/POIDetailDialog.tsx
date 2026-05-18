@@ -9,6 +9,7 @@ import { fetchBivouacFicheC2C } from '@/lib/camptocamp-api';
 import { renderC2CMarkup } from '@/lib/c2c-markup';
 import { getTypeMeta } from '@/lib/types';
 import { decodeHtmlEntities, formatDate } from '@/lib/format';
+import { labelKey, labelValue, osmSubtitle } from '@/lib/osm-i18n';
 import { TypeIcon } from './TypeIcon';
 import type { Comment, PoiCandidate, PoiFeature } from '@/lib/types';
 
@@ -257,32 +258,8 @@ function RefugesDetailDialog({
 }
 
 // ─── Dialog OSM (lecture locale des tags) ───────────────────────────
-
-const TAG_LABELS: Record<string, string> = {
-  natural: 'Type naturel',
-  amenity: 'Amenity',
-  man_made: 'Ouvrage',
-  drinking_water: 'Eau potable',
-  description: 'Description',
-  operator: 'Gestionnaire',
-  ele: 'Altitude (m)',
-  intermittent: 'Intermittent',
-  seasonal: 'Saisonnier',
-  source: 'Source de la donnée',
-  'name:fr': 'Nom (FR)',
-  wikidata: 'Wikidata',
-  fee: 'Payant',
-  access: 'Accès',
-};
-
-function readableTagValue(key: string, val: string): string {
-  if (val === 'yes') return 'oui';
-  if (val === 'no') return 'non';
-  if (val === 'permissive') return 'libre';
-  if (val === 'private') return 'privé';
-  if (key === 'ele') return `${Math.round(parseFloat(val))} m`;
-  return val;
-}
+// Le mapping clé/valeur → FR vit dans lib/osm-i18n.ts et est partagé
+// avec les autres sources OSM (eau, futurs commerces…).
 
 // ─── Dialog Camptocamp ──────────────────────────────────────────────
 
@@ -450,7 +427,7 @@ function OSMDetailDialog({
           </span>
         </DialogTitle>
         <div className="text-sm text-slate-500">
-          {subtype ?? "point d'eau"}
+          {subtype ?? osmSubtitle(tags)}
           {alt !== undefined && ` · ${alt} m`}
         </div>
 
@@ -469,8 +446,8 @@ function OSMDetailDialog({
             <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
               {renderedTags.map(([k, v]) => (
                 <React.Fragment key={k}>
-                  <dt className="text-slate-500">{TAG_LABELS[k] ?? k}</dt>
-                  <dd className="text-slate-800">{readableTagValue(k, v)}</dd>
+                  <dt className="text-slate-500">{labelKey(k)}</dt>
+                  <dd className="text-slate-800">{labelValue(k, v)}</dd>
                 </React.Fragment>
               ))}
             </dl>

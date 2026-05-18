@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { PoiFeature } from './types';
 import { bboxToGridKey, readCache, writeCache, TTL } from './cache';
+import { osmSubtitle } from './osm-i18n';
 
 const OVERPASS_ENDPOINT = 'https://overpass-api.de/api/interpreter';
 const CACHE_PREFIX = 'osm-water';
@@ -28,13 +29,8 @@ function deriveName(tags: Record<string, string>): string {
   return "Point d'eau (OSM)";
 }
 
-function deriveSubtype(tags: Record<string, string>): string {
-  if (tags.natural === 'spring') return 'source';
-  if (tags.amenity === 'drinking_water') return 'eau potable';
-  if (tags.man_made === 'water_tap') return 'robinet';
-  if (tags.man_made === 'water_well') return 'puits';
-  return 'eau';
-}
+// Le sous-titre FR est dérivé via osmSubtitle() (lib/osm-i18n) pour rester
+// cohérent avec l'affichage du dialog et des futures sources OSM.
 
 /**
  * Récupère les points d'eau (sources, eau potable, robinets, puits) OSM
@@ -82,7 +78,7 @@ out body;`;
     const node = safe.data;
     const tags = (node.tags ?? {}) as Record<string, string>;
     const nom = deriveName(tags);
-    const subtype = deriveSubtype(tags);
+    const subtype = osmSubtitle(tags);
     const eleNum = tags.ele !== undefined ? parseFloat(tags.ele) : NaN;
     const alt = Number.isFinite(eleNum) ? Math.round(eleNum) : undefined;
     const negId = -node.id;

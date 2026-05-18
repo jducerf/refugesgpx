@@ -50,8 +50,8 @@ export function POIList() {
             const alt = f.properties.coord?.alt;
             const subtype = (f.properties as { osmSubtype?: string }).osmSubtype;
             const typeLabel =
-              source === 'osm' && subtype
-                ? subtype
+              source === 'osm'
+                ? (subtype ?? "point d'eau")
                 : source === 'c2c'
                   ? 'bivouac'
                   : decodeHtmlEntities(t);
