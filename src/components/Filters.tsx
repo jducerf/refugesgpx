@@ -1,6 +1,6 @@
-import * as React from 'react';
 import { Slider } from './ui/Slider';
 import { Checkbox } from './ui/Checkbox';
+import { TypeIcon } from './TypeIcon';
 import { useAppStore } from '@/store/useAppStore';
 import { ALL_TYPE_KEYS, BUFFER_STEPS, TYPE_LABELS, type TypeKey } from '@/lib/types';
 
@@ -15,7 +15,7 @@ export function Filters() {
       <div>
         <div className="mb-1 flex items-center justify-between">
           <span className="text-xs font-medium text-slate-700">Distance du tracé</span>
-          <span className="text-sm font-semibold text-blue-700">
+          <span className="text-sm font-semibold text-[var(--color-accent)]">
             {BUFFER_STEPS[bufferStepIdx]?.label}
           </span>
         </div>
@@ -33,24 +33,22 @@ export function Filters() {
       </div>
 
       <div>
-        <div className="mb-1 text-xs font-medium text-slate-700">Types de POIs</div>
-        <div className="grid grid-cols-2 gap-y-1.5 gap-x-3 text-sm">
+        <div className="mb-1.5 text-xs font-medium text-slate-700">Types de POIs</div>
+        <div className="grid grid-cols-1 gap-y-1.5 text-sm">
           {ALL_TYPE_KEYS.map((k) => {
             const meta = TYPE_LABELS[k];
             const checked = enabledTypes.has(k);
             return (
               <label
                 key={k}
-                className="flex cursor-pointer items-center gap-2 text-slate-800"
+                className="flex cursor-pointer items-center gap-2.5 text-slate-800"
               >
                 <Checkbox
                   checked={checked}
                   onCheckedChange={() => toggleType(k as TypeKey)}
                 />
-                <span className="text-base leading-none" aria-hidden>
-                  {meta.emoji}
-                </span>
-                <span className="text-xs">{meta.label.split(' ')[0]}</span>
+                <TypeIcon meta={meta} size={16} marker />
+                <span className="text-xs">{meta.label}</span>
               </label>
             );
           })}

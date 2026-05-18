@@ -11,13 +11,14 @@ import {
   traceToLine,
 } from '@/lib/geo';
 import { fetchPOIsInBbox } from '@/lib/refuges-api';
-import { BUFFER_STEPS, TYPE_LABELS, getEmoji, type TypeKey } from '@/lib/types';
+import { BUFFER_STEPS, TYPE_LABELS, type TypeKey } from '@/lib/types';
+import { loadAllMarkerImages } from '@/lib/markers';
 
 // OSM standard : ouvert, très tolérant, attribution standard.
-// OpenTopoMap est plus joli pour la rando mais rate-limit strict — voir BACKGROUNDS pour l'option future.
+// On évite délibérément de déclarer `glyphs` : les couches POI utilisent des
+// icon-image pré-rendues (pas de text-field), donc aucun PBF n'est nécessaire.
 const OSM_STYLE = {
   version: 8,
-  glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
   sources: {
     osm: {
       type: 'raster',
@@ -37,6 +38,18 @@ const OSM_STYLE = {
     { id: 'osm', type: 'raster', source: 'osm' },
   ],
 } as unknown as maplibregl.StyleSpecification;
+
+/**
+ * Enregistre tous les markers SVG (cercle coloré + icône Lucide) comme images
+ * MapLibre. Asynchrone à cause du Image() loader, retourne une Promise.
+ */
+async function registerAllMarkers(map: maplibregl.Map) {
+  const images = await loadAllMarkerImages(48);
+  for (const { id, image } of images) {
+    if (map.hasImage(id)) continue;
+    map.addImage(id, image, { pixelRatio: 2 });
+  }
+}
 
 const EMPTY_FC: FeatureCollection = { type: 'FeatureCollection', features: [] };
 
@@ -88,22 +101,34 @@ export function MapView() {
         paint: { 'line-color': '#1e40af', 'line-width': 4, 'line-opacity': 0.9 },
       });
 
+      // Markers SVG (cercle coloré + icône Lucide) — chargement asynchrone
+      registerAllMarkers(map).catch((e) => console.error('markers load failed', e));
+
       map.addSource('pois', { type: 'geojson', data: EMPTY_FC });
+
+      // Halo doré sous le marker des POIs sélectionnés
+      map.addLayer({
+        id: 'pois-halo',
+        type: 'circle',
+        source: 'pois',
+        filter: ['==', ['get', 'selected'], true],
+        paint: {
+          'circle-radius': 20,
+          'circle-color': '#f5b800',
+          'circle-opacity': 0.5,
+          'circle-stroke-color': '#b85c38',
+          'circle-stroke-width': 1.5,
+        },
+      });
       map.addLayer({
         id: 'pois',
         type: 'symbol',
         source: 'pois',
         layout: {
-          'text-field': ['get', 'emoji'],
-          'text-font': ['Noto Sans Regular'],
-          'text-size': ['case', ['get', 'selected'], 28, 22],
-          'text-allow-overlap': true,
-          'text-anchor': 'bottom',
-          'text-offset': [0, 0.2],
-        },
-        paint: {
-          'text-halo-color': ['case', ['get', 'selected'], '#f5b800', '#ffffff'],
-          'text-halo-width': ['case', ['get', 'selected'], 3, 1],
+          'icon-image': ['get', 'iconImage'],
+          'icon-size': ['case', ['get', 'selected'], 0.6, 0.5],
+          'icon-allow-overlap': true,
+          'icon-anchor': 'center',
         },
       });
 
@@ -212,16 +237,20 @@ export function MapView() {
     const apply = () => {
       const src = map.getSource('pois') as maplibregl.GeoJSONSource | undefined;
       if (!src) return;
-      const feats = candidates.map(({ feature: f, distM, id }) => ({
-        ...f,
-        properties: {
-          ...f.properties,
-          id,
-          emoji: getEmoji(f.properties.type?.valeur),
-          selected: selectedIds.has(id),
-          distM: Math.round(distM),
-        },
-      }));
+      const feats = candidates.map(({ feature: f, distM, id }) => {
+        const typeValeur = f.properties.type?.valeur;
+        const iconImage = typeValeur ? `poi-${typeValeur}` : 'poi-default';
+        return {
+          ...f,
+          properties: {
+            ...f.properties,
+            id,
+            iconImage,
+            selected: selectedIds.has(id),
+            distM: Math.round(distM),
+          },
+        };
+      });
       src.setData({ type: 'FeatureCollection', features: feats });
     };
     if (map.isStyleLoaded()) apply();

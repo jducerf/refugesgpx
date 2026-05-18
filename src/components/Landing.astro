@@ -13,7 +13,7 @@
       <a href="#fonctionnement" class="text-[var(--color-ink-soft)] hover:text-[var(--color-accent)]">Comment ça marche</a>
       <a href="#pour-qui" class="text-[var(--color-ink-soft)] hover:text-[var(--color-accent)]">Pour qui</a>
       <a href="#donnees" class="text-[var(--color-ink-soft)] hover:text-[var(--color-accent)]">Sources</a>
-      <a href="https://github.com/yoanbernabeu/refuges-gpx-enricher" target="_blank" rel="noopener" class="text-[var(--color-ink-soft)] hover:text-[var(--color-accent)]">GitHub ↗</a>
+      <a href="https://github.com/yoanbernabeu/refugesgpx" target="_blank" rel="noopener" class="text-[var(--color-ink-soft)] hover:text-[var(--color-accent)]">GitHub ↗</a>
     </nav>
   </div>
 </header>
@@ -99,18 +99,27 @@
             stroke-dasharray="6 5"
           />
 
-          <!-- Waypoints, posés sur la trace -->
-          <g>
-            <circle cx="80" cy="231" r="11" fill="var(--color-paper)" stroke="var(--color-ink)" stroke-width="1.8" />
-            <text x="80" y="235" text-anchor="middle" font-size="12">💧</text>
+          <!-- Waypoints, posés sur la trace : marker carto avec icône Lucide blanche -->
+          <!-- Point d'eau (bleu) -->
+          <g transform="translate(80 231)">
+            <circle r="11" fill="#2C7DA0" stroke="#1A1A1A" stroke-width="1.8" />
+            <g transform="translate(-7 -7) scale(0.6)" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/>
+            </g>
           </g>
-          <g>
-            <circle cx="180" cy="213" r="11" fill="var(--color-paper)" stroke="var(--color-ink)" stroke-width="1.8" />
-            <text x="180" y="217" text-anchor="middle" font-size="12">⛺</text>
+          <!-- Cabane (vert mousse) -->
+          <g transform="translate(180 213)">
+            <circle r="11" fill="#5E6F4A" stroke="#1A1A1A" stroke-width="1.8" />
+            <g transform="translate(-7 -7) scale(0.6)" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3.5 21 14 3"/><path d="M20.5 21 14 3"/><path d="M3.5 21h17"/><path d="M12 12v9"/>
+            </g>
           </g>
-          <g>
-            <circle cx="290" cy="205" r="12" fill="var(--color-trail)" stroke="var(--color-ink)" stroke-width="1.8" />
-            <text x="290" y="210" text-anchor="middle" font-size="13">🏠</text>
+          <!-- Refuge gardé (rouge accent) -->
+          <g transform="translate(290 205)">
+            <circle r="12" fill="#B85C38" stroke="#1A1A1A" stroke-width="1.8" />
+            <g transform="translate(-7.5 -7.5) scale(0.62)" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+            </g>
           </g>
 
           <!-- Annotation manuscrite, centrée en haut -->
@@ -189,20 +198,20 @@
       </div>
 
       <ul class="space-y-5">
-        <li class="border-l-2 border-[var(--color-accent)] pl-5">
-          <div class="font-display text-xl font-semibold text-[var(--color-ink)]">🏠 Refuges gardés et gîtes d'étape</div>
+        <li class="border-l-2 pl-5" style="border-color: #B85C38">
+          <div class="font-display text-xl font-semibold text-[var(--color-ink)]">Refuges gardés et gîtes d'étape</div>
           <p class="mt-1 text-[var(--color-ink-soft)]">Réservations, capacité, période d'ouverture — l'info que vous cherchiez à recouper.</p>
         </li>
-        <li class="border-l-2 border-[var(--color-accent)] pl-5">
-          <div class="font-display text-xl font-semibold text-[var(--color-ink)]">⛺ Cabanes non gardées</div>
+        <li class="border-l-2 pl-5" style="border-color: #5E6F4A">
+          <div class="font-display text-xl font-semibold text-[var(--color-ink)]">Cabanes non gardées</div>
           <p class="mt-1 text-[var(--color-ink-soft)]">Le couchage de secours, l'état du toit, le poêle, l'eau à proximité — par les contributeurs qui y sont passés ce mois-ci.</p>
         </li>
-        <li class="border-l-2 border-[var(--color-accent)] pl-5">
-          <div class="font-display text-xl font-semibold text-[var(--color-ink)]">💧 Points d'eau & ravitos</div>
+        <li class="border-l-2 pl-5" style="border-color: #2C7DA0">
+          <div class="font-display text-xl font-semibold text-[var(--color-ink)]">Points d'eau &amp; ravitos</div>
           <p class="mt-1 text-[var(--color-ink-soft)]">Sources, fontaines, captages — ceux qui décident où s'arrêter en plein été.</p>
         </li>
-        <li class="border-l-2 border-[var(--color-accent)] pl-5">
-          <div class="font-display text-xl font-semibold text-[var(--color-ink)]">⚠️ Passages délicats</div>
+        <li class="border-l-2 pl-5" style="border-color: #DDA853">
+          <div class="font-display text-xl font-semibold text-[var(--color-ink)]">Passages délicats</div>
           <p class="mt-1 text-[var(--color-ink-soft)]">Pas d'escalade, vires, traversées exposées — repérés en amont pour préparer le matériel.</p>
         </li>
       </ul>
@@ -263,7 +272,7 @@
         <div>
           <div class="font-display text-xl font-semibold text-[var(--color-ink)]">Vous</div>
           <p class="mt-2 text-[var(--color-ink-soft)]">
-            Le code est <a href="https://github.com/yoanbernabeu/refuges-gpx-enricher" target="_blank" rel="noopener" class="underline decoration-[var(--color-accent)] underline-offset-2 hover:text-[var(--color-accent)]">open-source MIT</a>. Bug, idée, contribution : ouvrez une issue.
+            Le code est <a href="https://github.com/yoanbernabeu/refugesgpx" target="_blank" rel="noopener" class="underline decoration-[var(--color-accent)] underline-offset-2 hover:text-[var(--color-accent)]">open-source MIT</a>. Bug, idée, contribution : ouvrez une issue.
           </p>
         </div>
       </div>

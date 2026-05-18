@@ -1,8 +1,8 @@
-import * as React from 'react';
 import { Checkbox } from './ui/Checkbox';
 import { ScrollArea } from './ui/ScrollArea';
+import { TypeIcon } from './TypeIcon';
 import { useAppStore } from '@/store/useAppStore';
-import { getEmoji } from '@/lib/types';
+import { getTypeMeta } from '@/lib/types';
 import { decodeHtmlEntities, formatDistance } from '@/lib/format';
 import { Loader2 } from 'lucide-react';
 
@@ -38,7 +38,7 @@ export function POIList() {
         <ul className="divide-y divide-slate-100">
           {candidates.map(({ feature: f, distM, id }) => {
             const t = f.properties.type?.valeur ?? '';
-            const emoji = getEmoji(t);
+            const meta = getTypeMeta(t);
             const checked = selectedIds.has(id);
             const alt = f.properties.coord?.alt;
             return (
@@ -54,9 +54,7 @@ export function POIList() {
                     aria-label={`Sélectionner ${f.properties.nom}`}
                   />
                 </div>
-                <span className="text-lg leading-tight" aria-hidden>
-                  {emoji}
-                </span>
+                {meta && <TypeIcon meta={meta} size={12} marker className="mt-0.5" />}
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm font-semibold text-slate-900">
                     {decodeHtmlEntities(f.properties.nom)}
@@ -64,7 +62,7 @@ export function POIList() {
                   <div className="text-[11px] text-slate-500">
                     {decodeHtmlEntities(t)}
                     {alt !== undefined && ` · ${alt} m`} ·{' '}
-                    <b className="text-blue-700">{formatDistance(distM)} du tracé</b>
+                    <b className="text-[var(--color-accent)]">{formatDistance(distM)} du tracé</b>
                   </div>
                 </div>
               </li>

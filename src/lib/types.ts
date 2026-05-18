@@ -33,7 +33,6 @@ export type BufferPolygonFeature = Feature<Polygon>;
 export interface PoiCandidate {
   feature: PoiFeature;
   distM: number;
-  /** id garanti (filtré en amont si manquant) */
   id: number;
 }
 
@@ -53,30 +52,88 @@ export interface FicheData {
   comments: Comment[];
 }
 
+// ─── Types de POIs ──────────────────────────────────────────────────
+// Pour chaque type : libellé, valeur API, couleur de marqueur et `iconKey`
+// référençant un composant Lucide (chargé côté UI dans `<TypeIcon />`).
+
+export interface TypeMeta {
+  id: number;
+  label: string;
+  valeurAPI: string;
+  color: string;
+  /** Clé d'icône Lucide consommée par <TypeIcon /> */
+  iconKey: 'home' | 'tent' | 'bed' | 'droplet' | 'alert';
+  /** Path SVG (inner of <g>) pour marker de carte rasterizé */
+  svgPath: string;
+}
+
+const LUCIDE_PATHS: Record<TypeMeta['iconKey'], string> = {
+  // House
+  home: '<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',
+  // Tent
+  tent: '<path d="M3.5 21 14 3"/><path d="M20.5 21 14 3"/><path d="M3.5 21h17"/><path d="M12 12v9"/>',
+  // BedDouble
+  bed: '<path d="M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8"/><path d="M4 10V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v4"/><path d="M12 4v6"/><path d="M2 18h20"/>',
+  // Droplet
+  droplet: '<path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/>',
+  // TriangleAlert
+  alert: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+};
+
 export const TYPE_LABELS = {
-  refuge: { id: 10, label: 'Refuges gardés', emoji: '🏠', valeurAPI: 'refuge gardé' },
-  cabane: { id: 7, label: 'Cabanes non gardées', emoji: '⛺', valeurAPI: 'cabane non gardée' },
-  gite: { id: 9, label: "Gîtes d'étape", emoji: '🛏️', valeurAPI: "gîte d'étape" },
-  pt_eau: { id: 23, label: "Points d'eau", emoji: '💧', valeurAPI: "point d'eau" },
-  pt_passage: { id: 3, label: 'Passages délicats', emoji: '⚠️', valeurAPI: 'passage délicat' },
-} as const;
+  refuge: {
+    id: 10,
+    label: 'Refuges gardés',
+    valeurAPI: 'refuge gardé',
+    color: '#B85C38', // accent rouge
+    iconKey: 'home',
+    svgPath: LUCIDE_PATHS.home,
+  },
+  cabane: {
+    id: 7,
+    label: 'Cabanes non gardées',
+    valeurAPI: 'cabane non gardée',
+    color: '#5E6F4A', // vert mousse
+    iconKey: 'tent',
+    svgPath: LUCIDE_PATHS.tent,
+  },
+  gite: {
+    id: 9,
+    label: "Gîtes d'étape",
+    valeurAPI: "gîte d'étape",
+    color: '#6F4E8E', // violet
+    iconKey: 'bed',
+    svgPath: LUCIDE_PATHS.bed,
+  },
+  pt_eau: {
+    id: 23,
+    label: "Points d'eau",
+    valeurAPI: "point d'eau",
+    color: '#2C7DA0', // bleu eau
+    iconKey: 'droplet',
+    svgPath: LUCIDE_PATHS.droplet,
+  },
+  pt_passage: {
+    id: 3,
+    label: 'Passages délicats',
+    valeurAPI: 'passage délicat',
+    color: '#DDA853', // jaune trail
+    iconKey: 'alert',
+    svgPath: LUCIDE_PATHS.alert,
+  },
+} as const satisfies Record<string, TypeMeta>;
 
 export type TypeKey = keyof typeof TYPE_LABELS;
 
 export const ALL_TYPE_KEYS: TypeKey[] = Object.keys(TYPE_LABELS) as TypeKey[];
 
-const VALEUR_TO_EMOJI: Record<string, string> = Object.fromEntries(
-  Object.values(TYPE_LABELS).map((t) => [t.valeurAPI, t.emoji]),
+const VALEUR_TO_META: Record<string, TypeMeta> = Object.fromEntries(
+  Object.values(TYPE_LABELS).map((t) => [t.valeurAPI, t]),
 );
-// extras hors filtres
-VALEUR_TO_EMOJI['bâtiment en montagne'] = '🏚️';
-VALEUR_TO_EMOJI['sommet'] = '⛰️';
-VALEUR_TO_EMOJI['lac'] = '🏞️';
-VALEUR_TO_EMOJI['grotte'] = '🕳️';
 
-export function getEmoji(typeValeur: string | undefined): string {
-  if (!typeValeur) return '•';
-  return VALEUR_TO_EMOJI[typeValeur] ?? '•';
+export function getTypeMeta(typeValeur: string | undefined): TypeMeta | null {
+  if (!typeValeur) return null;
+  return VALEUR_TO_META[typeValeur] ?? null;
 }
 
 export interface BufferStep {

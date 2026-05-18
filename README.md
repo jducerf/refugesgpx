@@ -1,8 +1,13 @@
-# 🥾 Enrichisseur GPX — Refuges.info
+# 🥾 Refuges.GPX
 
-> Web-app desktop qui prend un GPX existant, affiche tous les refuges, cabanes, gîtes et points d'eau de [refuges.info](https://www.refuges.info) à proximité, et exporte un **GPX enrichi** + une **fiche d'étape PDF** imprimable.
+> Web-app qui prend un GPX existant, affiche tous les refuges, cabanes, gîtes et points d'eau de [refuges.info](https://www.refuges.info) à proximité du tracé, et exporte un **GPX enrichi** + un **topo PDF** imprimable.
 
-🚀 **En ligne** : [refuges.yoandev.co](https://refuges.yoandev.co) *(à venir)*
+🚀 **En ligne** : **[refuges.yoandev.co](https://refuges.yoandev.co)**
+
+[![Licence MIT](https://img.shields.io/badge/Licence-MIT-1A1A1A.svg)](./LICENSE)
+[![Données CC BY-SA 2.0](https://img.shields.io/badge/Donn%C3%A9es-CC%20BY--SA%202.0-B85C38.svg)](https://creativecommons.org/licenses/by-sa/2.0/)
+[![Astro](https://img.shields.io/badge/Astro-6-orange.svg)](https://astro.build)
+[![Sans backend](https://img.shields.io/badge/Sans-backend-5E6F4A.svg)](#stack)
 
 ---
 
@@ -12,17 +17,17 @@ Les planificateurs grand public (OpenRunner, Komoot, Visorando) ne savent pas af
 
 Cette app **complète** ces outils : tu traces ton parcours là où tu as l'habitude, tu déposes le GPX ici, tu coches les refuges qui t'intéressent (avec accès aux derniers commentaires + photos terrain), et tu repars avec un GPX enrichi prêt à charger dans Komoot/OsmAnd/Gaia/GPS dédié.
 
-## Fonctionnalités V1
+## Fonctionnalités
 
 - 📂 Import GPX (drag-and-drop ou fichier)
 - 📏 Distance paramétrable autour du tracé (100 m à 5 km)
 - 🏷️ Filtres par type : refuges, cabanes, gîtes, points d'eau, passages délicats
-- 🗺️ Affichage carte (OpenTopoMap) avec POIs emoji
+- 🗺️ Carte interactive (OpenStreetMap) avec POIs identifiés par emoji
 - 📋 Liste latérale triée par distance au tracé
 - 📖 Fiche détaillée par POI : équipements, accès, **5 derniers commentaires + photos**
 - ✅ Sélection multiple
-- 📥 **Export GPX enrichi** : tracé original + waypoints sélectionnés
-- 🖨️ **Export PDF imprimable** : fiche d'étape avec carte + détails + commentaires (utilisable offline sur téléphone)
+- 📥 **Export GPX enrichi** : tracé original intact + waypoints sélectionnés
+- 🖨️ **Export topo PDF imprimable** : carte miniature + détails + commentaires (utilisable offline sur téléphone)
 
 ## Stack
 
@@ -30,7 +35,7 @@ Cette app **complète** ces outils : tu traces ton parcours là où tu as l'habi
 - [React 19](https://react.dev) (islands)
 - [TypeScript 6](https://www.typescriptlang.org)
 - [Tailwind CSS 4](https://tailwindcss.com)
-- [MapLibre GL JS 5](https://maplibre.org) + [OpenTopoMap](https://opentopomap.org)
+- [MapLibre GL JS 5](https://maplibre.org) + tuiles [OpenStreetMap](https://www.openstreetmap.org)
 - [Turf.js 7](https://turfjs.org) — calculs géo
 - [Zod 4](https://zod.dev) — validation runtime des réponses API
 - [Zustand 5](https://zustand-demo.pmnd.rs) — state management
@@ -41,8 +46,8 @@ Cette app **complète** ces outils : tu traces ton parcours là où tu as l'habi
 ## Développement
 
 ```bash
-git clone https://github.com/yoanbernabeu/refuges-gpx-enricher
-cd refuges-gpx-enricher
+git clone https://github.com/yoanbernabeu/refugesgpx
+cd refugesgpx
 npm install
 npm run dev
 ```
@@ -67,19 +72,34 @@ Le fichier [`netlify.toml`](./netlify.toml) configure tout ; un `git push` sur `
 
 L'app étant un site statique, elle peut tout aussi bien être servie via Cloudflare Pages, GitHub Pages, Vercel ou n'importe quel hébergeur de fichiers statiques.
 
+## Fond de carte — stratégie pérennité
+
+Par défaut, l'app utilise les **tuiles standard d'OpenStreetMap** (`tile.openstreetmap.org`) — gratuites, libres, sans clé. Politique d'usage : ["moderate use" tolérée](https://operations.osmfoundation.org/policies/tiles/) (quelques milliers de requêtes par jour, OK pour le free tier Netlify).
+
+Si l'audience grandit, le style de carte est isolé dans [`src/components/MapView.tsx`](./src/components/MapView.tsx) (constante `OSM_STYLE`) et basculable en quelques lignes vers un provider tiers gratuit avec inscription :
+
+| Provider | Free tier | Atouts pour la rando |
+|---|---|---|
+| **[MapTiler](https://www.maptiler.com)** | 100 k tuiles + 25 k chargements / mois | Style « Outdoor » + courbes de niveau, gros catalogue |
+| **[Stadia Maps](https://stadiamaps.com)** | 200 k tuiles / mois | Stamen Terrain, fonds rétro |
+| **[Thunderforest](https://www.thunderforest.com)** | 150 k tuiles / mois | OpenCycleMap, Outdoors, OpenTopoMap stable |
+| **[Géoportail IGN](https://geoservices.ign.fr)** | gratuit (clé obligatoire) | Scan25 — la référence rando en France |
+
+Chacun fonctionne avec MapLibre via un simple changement d'URL de tuiles + ajout de clé.
+
 ## Données & licences
 
 - **Code** : [MIT](./LICENSE)
 - **Données** : © [refuges.info](https://www.refuges.info) contributors — [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0/)
-- **Fond de carte** : [OpenTopoMap](https://opentopomap.org) (CC BY-SA) sur données [OpenStreetMap](https://www.openstreetmap.org/copyright)
+- **Fond de carte** : tuiles [OpenStreetMap](https://www.openstreetmap.org/copyright) (ODbL)
 
-Toute donnée affichée ou exportée par cette application reste sous **CC BY-SA 2.0**. L'attribution est visible sur la carte, dans le GPX (`<copyright>`) et dans la fiche PDF générée.
+Toute donnée affichée ou exportée par cette application reste sous **CC BY-SA 2.0**. L'attribution est visible sur la carte, dans le GPX (`<copyright>`) et dans le topo PDF généré.
 
 ## Crédits
 
 - L'équipe et la communauté de [refuges.info](https://www.refuges.info) pour leur travail extraordinaire d'inventaire collaboratif des refuges et cabanes des massifs français et européens.
-- OpenStreetMap et OpenTopoMap pour les fonds de carte libres.
+- OpenStreetMap pour le fond de carte libre.
 
 ## Contribuer
 
-Les contributions sont bienvenues — ouvre une issue ou une PR. Bug d'API refuges.info ? Voir [`api.md`](./api.md) pour les anomalies déjà identifiées, sinon une issue upstream est probablement la bonne destination.
+Les contributions sont bienvenues — ouvre une [issue](https://github.com/yoanbernabeu/refugesgpx/issues) ou une PR. Pour un bug côté API refuges.info, signaler [sur leur dépôt upstream](https://github.com/RefugesInfo/www.refuges.info) est généralement la bonne destination.

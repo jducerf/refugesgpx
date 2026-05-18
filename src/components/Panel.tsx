@@ -32,7 +32,7 @@ export function Panel() {
             <Home className="h-4 w-4" />
           </button>
           <a
-            href="https://github.com/yoanbernabeu/refuges-gpx-enricher"
+            href="https://github.com/yoanbernabeu/refugesgpx"
             target="_blank"
             rel="noopener"
             className="rounded-md p-1.5 text-[var(--color-ink-mute)] transition hover:bg-[var(--color-paper-warm)] hover:text-[var(--color-ink)]"

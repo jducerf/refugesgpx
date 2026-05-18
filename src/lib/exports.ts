@@ -1,5 +1,13 @@
 import type { ParsedGpx, PoiCandidate } from './types';
-import { getEmoji } from './types';
+import { getTypeMeta } from './types';
+
+const TYPE_PREFIX: Record<string, string> = {
+  'refuge gardé': '[Refuge]',
+  'cabane non gardée': '[Cabane]',
+  "gîte d'étape": '[Gîte]',
+  "point d'eau": '[Eau]',
+  'passage délicat': '[Passage]',
+};
 
 function xmlEscape(s: string): string {
   return s.replace(/[&<>"']/g, (c) => {
@@ -34,9 +42,11 @@ export function buildEnrichedGpx(
     .map(({ feature: f, distM }) => {
       const props = f.properties;
       const typeValeur = props.type?.valeur ?? '';
-      const emoji = getEmoji(typeValeur);
-      const name = emoji ? `${emoji} ${props.nom}` : props.nom;
+      const prefix = TYPE_PREFIX[typeValeur];
+      const name = prefix ? `${prefix} ${props.nom}` : props.nom;
       const alt = props.coord?.alt;
+      // appel pour conserver l'import et permettre des extensions futures
+      void getTypeMeta(typeValeur);
       const ele = alt !== undefined ? `<ele>${alt}</ele>` : '';
       const link = props.lien ? `<link href="${xmlEscape(props.lien)}"/>` : '';
       const desc = `${typeValeur}${
@@ -53,7 +63,7 @@ export function buildEnrichedGpx(
     .join('\n');
 
   return `<?xml version="1.0" encoding="UTF-8"?>
-<gpx version="1.1" creator="refuges-gpx-enricher" xmlns="http://www.topografix.com/GPX/1/1">
+<gpx version="1.1" creator="refugesgpx" xmlns="http://www.topografix.com/GPX/1/1">
   <metadata>
     <name>${xmlEscape(trace.name)} (enrichi)</name>
     <desc>Tracé enrichi de ${selectedPois.length} POI(s) refuges.info</desc>

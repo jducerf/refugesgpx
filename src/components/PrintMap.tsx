@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import type { ParsedGpx, PoiFeature } from '@/lib/types';
-import { getEmoji } from '@/lib/types';
 import { bufferLine, traceBbox, traceToLine } from '@/lib/geo';
+import { loadAllMarkerImages } from '@/lib/markers';
 
 interface PrintMapProps {
   trace: ParsedGpx;
@@ -18,7 +18,6 @@ interface PrintMapProps {
 
 const STYLE = {
   version: 8,
-  glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
   sources: {
     osm: {
       type: 'raster',
@@ -61,7 +60,7 @@ export function PrintMap({
       fadeDuration: 0,
     });
 
-    map.on('load', () => {
+    map.on('load', async () => {
       // Trace + buffer (très léger, juste un repère)
       const line = traceToLine(trace);
       const buf = bufferLine(line, 500);
@@ -84,35 +83,32 @@ export function PrintMap({
         paint: { 'line-color': '#b85c38', 'line-width': 3 },
       });
 
-      // POIs sélectionnés
-      const features = pois.map(({ feature: f }) => ({
-        ...f,
-        properties: {
-          ...f.properties,
-          emoji: getEmoji(f.properties.type?.valeur),
-        },
-      }));
+      // Markers SVG (cercle coloré + icône Lucide blanche)
+      const images = await loadAllMarkerImages(48);
+      for (const { id, image } of images) {
+        if (!map.hasImage(id)) map.addImage(id, image, { pixelRatio: 2 });
+      }
+
+      const features = pois.map(({ feature: f }) => {
+        const valeur = f.properties.type?.valeur;
+        return {
+          ...f,
+          properties: {
+            ...f.properties,
+            iconImage: valeur ? `poi-${valeur}` : 'poi-default',
+          },
+        };
+      });
       map.addSource('pois', { type: 'geojson', data: { type: 'FeatureCollection', features } });
       map.addLayer({
-        id: 'poi-dot',
-        type: 'circle',
-        source: 'pois',
-        paint: {
-          'circle-radius': 7,
-          'circle-color': '#dda853',
-          'circle-stroke-color': '#1a1a1a',
-          'circle-stroke-width': 2,
-        },
-      });
-      map.addLayer({
-        id: 'poi-emoji',
+        id: 'poi-icon',
         type: 'symbol',
         source: 'pois',
         layout: {
-          'text-field': ['get', 'emoji'],
-          'text-font': ['Noto Sans Regular'],
-          'text-size': 14,
-          'text-allow-overlap': true,
+          'icon-image': ['get', 'iconImage'],
+          'icon-size': 0.42,
+          'icon-allow-overlap': true,
+          'icon-anchor': 'center',
         },
       });
 

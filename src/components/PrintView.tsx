@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Loader2, Printer } from 'lucide-react';
 import type { ParsedGpx, PoiFeature, Comment } from '@/lib/types';
-import { getEmoji } from '@/lib/types';
+import { getTypeMeta } from '@/lib/types';
+import { TypeIcon } from './TypeIcon';
 import { traceLengthKm, traceElevationStats } from '@/lib/geo';
 import { fetchComments, fetchPointFiche, refugesPhotoUrl } from '@/lib/refuges-api';
 import { decodeHtmlEntities, formatDate, formatDistance } from '@/lib/format';
@@ -169,7 +170,7 @@ export function PrintView() {
             (typeof item.feature.id === 'number' ? item.feature.id : idx);
           const p = item.fiche?.properties ?? item.feature.properties;
           const t = p.type?.valeur ?? '';
-          const emoji = getEmoji(t);
+          const meta = getTypeMeta(t);
           const alt = p.coord?.alt;
           const places = (p as any).places?.valeur ?? (p as any).places?.nb;
           const desc: string =
@@ -187,9 +188,10 @@ export function PrintView() {
               key={fallbackId}
               className="break-inside-avoid border-l-2 border-[var(--color-accent)] pl-4 print:break-inside-avoid"
             >
-              <h2 className="font-display text-xl font-semibold leading-tight">
-                <span className="mr-2 text-[var(--color-ink-mute)]">{idx + 1}.</span>
-                <span aria-hidden>{emoji}</span> {decodeHtmlEntities(p.nom)}
+              <h2 className="font-display flex items-center gap-2 text-xl font-semibold leading-tight">
+                <span className="text-[var(--color-ink-mute)]">{idx + 1}.</span>
+                {meta && <TypeIcon meta={meta} size={14} marker />}
+                <span>{decodeHtmlEntities(p.nom)}</span>
               </h2>
               <p className="text-xs text-[var(--color-ink-soft)]">
                 {decodeHtmlEntities(t)}

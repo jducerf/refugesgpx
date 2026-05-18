@@ -5,8 +5,9 @@ import { Button } from './ui/Button';
 import { Loader2, ExternalLink, Plus, Check } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { fetchComments, fetchPointFiche, refugesPhotoUrl } from '@/lib/refuges-api';
-import { getEmoji } from '@/lib/types';
+import { getTypeMeta } from '@/lib/types';
 import { decodeHtmlEntities, formatDate } from '@/lib/format';
+import { TypeIcon } from './TypeIcon';
 import type { Comment, PoiFeature } from '@/lib/types';
 
 export function POIDetailDialog() {
@@ -54,7 +55,7 @@ export function POIDetailDialog() {
 
   const p = feature?.properties as any;
   const t = p?.type?.valeur ?? '';
-  const emoji = getEmoji(t);
+  const meta = getTypeMeta(t);
   const alt = p?.coord?.alt;
   const places = p?.places?.valeur ?? p?.places?.nb;
   const desc: string =
@@ -88,11 +89,9 @@ export function POIDetailDialog() {
         {err && <p className="text-red-600">{err}</p>}
         {feature && p && (
           <>
-            <DialogTitle className="flex items-baseline gap-2 pr-8">
-              <span className="text-2xl leading-none" aria-hidden>
-                {emoji}
-              </span>
-              {decodeHtmlEntities(p.nom)}
+            <DialogTitle className="flex items-center gap-2.5 pr-8">
+              {meta && <TypeIcon meta={meta} size={18} marker />}
+              <span>{decodeHtmlEntities(p.nom)}</span>
             </DialogTitle>
             <div className="text-sm text-slate-500">
               {decodeHtmlEntities(t)}
