@@ -7,6 +7,7 @@ const TYPE_PREFIX: Record<string, string> = {
   "gîte d'étape": '[Gîte]',
   "point d'eau": '[Eau]',
   'passage délicat': '[Passage]',
+  osm_water: '[Eau OSM]',
 };
 
 function xmlEscape(s: string): string {
@@ -39,8 +40,14 @@ export function buildEnrichedGpx(
     .join('\n');
 
   const wpts = selectedPois
-    .map(({ feature: f, distM }) => {
-      const props = f.properties;
+    .map(({ feature: f, distM, source }) => {
+      const props = f.properties as Record<string, unknown> & {
+        nom: string;
+        type?: { valeur: string };
+        coord?: { alt?: number };
+        lien?: string;
+        osmSubtype?: string;
+      };
       const typeValeur = props.type?.valeur ?? '';
       const prefix = TYPE_PREFIX[typeValeur];
       const name = prefix ? `${prefix} ${props.nom}` : props.nom;
@@ -49,7 +56,11 @@ export function buildEnrichedGpx(
       void getTypeMeta(typeValeur);
       const ele = alt !== undefined ? `<ele>${alt}</ele>` : '';
       const link = props.lien ? `<link href="${xmlEscape(props.lien)}"/>` : '';
-      const desc = `${typeValeur}${
+      const typeLabel =
+        source === 'osm'
+          ? `eau OSM${props.osmSubtype ? ` (${props.osmSubtype})` : ''}`
+          : typeValeur;
+      const desc = `${typeLabel}${
         alt !== undefined ? ' · ' + alt + ' m' : ''
       } · ${Math.round(distM)} m du tracé`;
       return `  <wpt lat="${f.geometry.coordinates[1]}" lon="${f.geometry.coordinates[0]}">
@@ -62,12 +73,16 @@ export function buildEnrichedGpx(
     })
     .join('\n');
 
+  const hasOsm = selectedPois.some((p) => p.source === 'osm');
+  const sourcesLabel = hasOsm
+    ? 'refuges.info (CC BY-SA 2.0) + OpenStreetMap (ODbL)'
+    : 'refuges.info (CC BY-SA 2.0)';
   return `<?xml version="1.0" encoding="UTF-8"?>
 <gpx version="1.1" creator="refugesgpx" xmlns="http://www.topografix.com/GPX/1/1">
   <metadata>
     <name>${xmlEscape(trace.name)} (enrichi)</name>
-    <desc>Tracé enrichi de ${selectedPois.length} POI(s) refuges.info</desc>
-    <copyright author="refuges.info contributors">
+    <desc>Tracé enrichi de ${selectedPois.length} POI(s) — ${sourcesLabel}</desc>
+    <copyright author="${xmlEscape(sourcesLabel)}">
       <license>https://creativecommons.org/licenses/by-sa/2.0/</license>
     </copyright>
   </metadata>

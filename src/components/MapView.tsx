@@ -11,6 +11,7 @@ import {
   traceToLine,
 } from '@/lib/geo';
 import { fetchPOIsInBbox } from '@/lib/refuges-api';
+import { fetchWaterPointsOSM } from '@/lib/overpass-api';
 import { BUFFER_STEPS, TYPE_LABELS, type TypeKey } from '@/lib/types';
 import { loadAllMarkerImages } from '@/lib/markers';
 
@@ -61,10 +62,15 @@ export function MapView() {
   const trace = useAppStore((s) => s.trace);
   const bufferStepIdx = useAppStore((s) => s.bufferStepIdx);
   const enabledTypes = useAppStore((s) => s.enabledTypes);
+  const enabledAnnexTypes = useAppStore((s) => s.enabledAnnexTypes);
   const setCandidates = useAppStore((s) => s.setCandidates);
+  const setAnnexCandidates = useAppStore((s) => s.setAnnexCandidates);
   const setLoading = useAppStore((s) => s.setLoading);
+  const setAnnexLoading = useAppStore((s) => s.setAnnexLoading);
   const setApiError = useAppStore((s) => s.setApiError);
+  const setAnnexError = useAppStore((s) => s.setAnnexError);
   const candidates = useAppStore((s) => s.candidates);
+  const annexCandidates = useAppStore((s) => s.annexCandidates);
   const selectedIds = useAppStore((s) => s.selectedIds);
   const openDetail = useAppStore((s) => s.openDetail);
 
@@ -217,7 +223,7 @@ export function MapView() {
 
     fetchPOIsInBbox(bbox, typesCsv, ctrl.signal)
       .then((pois) => {
-        const candidates = filterByDistance(line, pois, bufferM);
+        const candidates = filterByDistance(line, pois, bufferM, 'refuges');
         setCandidates(candidates);
       })
       .catch((e) => {
@@ -230,6 +236,55 @@ export function MapView() {
     return () => ctrl.abort();
   }, [trace, bufferStepIdx, enabledTypes, setCandidates, setLoading, setApiError]);
 
+  // ─── Fetch sources annexes (Overpass / OSM) ─────────────────────
+  React.useEffect(() => {
+    if (!trace || enabledAnnexTypes.size === 0) {
+      setAnnexCandidates([]);
+      setAnnexError(null);
+      return;
+    }
+    const ctrl = new AbortController();
+    setAnnexLoading(true);
+    setAnnexError(null);
+
+    const bufferM = BUFFER_STEPS[bufferStepIdx]?.meters ?? 500;
+    const bbox = expandBboxMeters(traceBbox(trace), bufferM);
+    const line = traceToLine(trace);
+
+    // Pour l'instant, une seule annex source : osm_water
+    const wantWater = enabledAnnexTypes.has('osm_water' as TypeKey);
+
+    const tasks: Promise<unknown>[] = [];
+    if (wantWater) {
+      tasks.push(
+        fetchWaterPointsOSM(bbox, ctrl.signal).then((pois) => {
+          const cands = filterByDistance(line, pois, bufferM, 'osm');
+          setAnnexCandidates(cands);
+        }),
+      );
+    } else {
+      setAnnexCandidates([]);
+    }
+
+    Promise.all(tasks)
+      .catch((e) => {
+        if ((e as Error).name !== 'AbortError') {
+          setAnnexError(e instanceof Error ? e.message : 'Erreur Overpass');
+          setAnnexCandidates([]);
+        }
+      })
+      .finally(() => setAnnexLoading(false));
+
+    return () => ctrl.abort();
+  }, [
+    trace,
+    bufferStepIdx,
+    enabledAnnexTypes,
+    setAnnexCandidates,
+    setAnnexLoading,
+    setAnnexError,
+  ]);
+
   // ─── Update POIs layer ──────────────────────────────────────────
   React.useEffect(() => {
     const map = mapRef.current;
@@ -237,7 +292,8 @@ export function MapView() {
     const apply = () => {
       const src = map.getSource('pois') as maplibregl.GeoJSONSource | undefined;
       if (!src) return;
-      const feats = candidates.map(({ feature: f, distM, id }) => {
+      const all = [...candidates, ...annexCandidates];
+      const feats = all.map(({ feature: f, distM, id }) => {
         const typeValeur = f.properties.type?.valeur;
         const iconImage = typeValeur ? `poi-${typeValeur}` : 'poi-default';
         return {
@@ -255,7 +311,7 @@ export function MapView() {
     };
     if (map.isStyleLoaded()) apply();
     else map.once('load', apply);
-  }, [candidates, selectedIds]);
+  }, [candidates, annexCandidates, selectedIds]);
 
   return <div ref={containerRef} className="absolute inset-0 h-full w-full" />;
 }

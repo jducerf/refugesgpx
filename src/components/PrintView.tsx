@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Loader2, Printer } from 'lucide-react';
-import type { ParsedGpx, PoiFeature, Comment } from '@/lib/types';
+import type { ParsedGpx, PoiFeature, PoiSource, Comment } from '@/lib/types';
 import { getTypeMeta } from '@/lib/types';
 import { TypeIcon } from './TypeIcon';
 import { traceLengthKm, traceElevationStats } from '@/lib/geo';
@@ -13,7 +13,7 @@ const PRINT_STORAGE_KEY = 'refuges-print-payload';
 
 interface Payload {
   trace: ParsedGpx;
-  pois: { feature: PoiFeature; distM: number }[];
+  pois: { feature: PoiFeature; distM: number; source?: PoiSource }[];
 }
 
 interface Enriched {
@@ -21,6 +21,7 @@ interface Enriched {
   fiche: PoiFeature | null;
   comments: Comment[];
   distM: number;
+  source: PoiSource;
   error?: string;
 }
 
@@ -49,24 +50,37 @@ export function PrintView() {
     const ctrl = new AbortController();
     (async () => {
       const enriched: Enriched[] = await Promise.all(
-        payload.pois.map(async ({ feature, distM }) => {
+        payload.pois.map(async ({ feature, distM, source }) => {
+          // Source 'osm' : pas d'enrichissement distant — on lit les tags localement
+          if (source === 'osm') {
+            return { feature, fiche: null, comments: [], distM, source: 'osm' };
+          }
           const idCandidate =
-            feature.properties.id ?? (typeof feature.id === 'number' ? feature.id : NaN);
+            (feature.properties.id as number | undefined) ??
+            (typeof feature.id === 'number' ? feature.id : NaN);
           if (!Number.isFinite(idCandidate)) {
-            return { feature, fiche: null, comments: [], distM, error: 'id manquant' };
+            return {
+              feature,
+              fiche: null,
+              comments: [],
+              distM,
+              source: 'refuges',
+              error: 'id manquant',
+            };
           }
           try {
             const [fiche, comments] = await Promise.all([
               fetchPointFiche(idCandidate, ctrl.signal),
               fetchComments(idCandidate, ctrl.signal),
             ]);
-            return { feature, fiche, comments, distM };
+            return { feature, fiche, comments, distM, source: 'refuges' };
           } catch (e) {
             return {
               feature,
               fiche: null,
               comments: [],
               distM,
+              source: 'refuges',
               error: e instanceof Error ? e.message : 'err',
             };
           }
@@ -168,18 +182,85 @@ export function PrintView() {
           const fallbackId =
             (item.feature.properties.id as number | undefined) ??
             (typeof item.feature.id === 'number' ? item.feature.id : idx);
-          const p = item.fiche?.properties ?? item.feature.properties;
+          const p = (item.fiche?.properties ?? item.feature.properties) as Record<
+            string,
+            unknown
+          > & {
+            nom: string;
+            type?: { valeur: string };
+            coord?: { alt?: number };
+            lien?: string;
+            osmTags?: Record<string, string>;
+            osmSubtype?: string;
+          };
           const t = p.type?.valeur ?? '';
           const meta = getTypeMeta(t);
           const alt = p.coord?.alt;
-          const places = (p as any).places?.valeur ?? (p as any).places?.nb;
+          const isOsm = item.source === 'osm';
+
+          if (isOsm) {
+            const tags = p.osmTags ?? {};
+            const subtype = p.osmSubtype;
+            return (
+              <li
+                key={fallbackId}
+                className="break-inside-avoid border-l-2 border-[#4FA8C5] pl-4 print:break-inside-avoid"
+              >
+                <h2 className="font-display flex items-center gap-2 text-xl font-semibold leading-tight">
+                  <span className="text-[var(--color-ink-mute)]">{idx + 1}.</span>
+                  {meta && <TypeIcon meta={meta} size={14} marker />}
+                  <span>{decodeHtmlEntities(p.nom)}</span>
+                  <span className="rounded-sm bg-slate-200 px-1 text-[9px] font-semibold uppercase tracking-wider text-slate-600">
+                    OSM
+                  </span>
+                </h2>
+                <p className="text-xs text-[var(--color-ink-soft)]">
+                  {subtype ?? "point d'eau"}
+                  {alt !== undefined && ` · ${alt} m`} ·{' '}
+                  <b>{formatDistance(item.distM)} du tracé</b>
+                </p>
+
+                {tags.description && (
+                  <p className="mt-1.5 text-sm">{tags.description}</p>
+                )}
+
+                {(tags.operator || tags.fee || tags.intermittent || tags.seasonal) && (
+                  <p className="mt-1 text-xs text-[var(--color-ink-soft)]">
+                    {tags.operator && <>Gestionnaire : {tags.operator}. </>}
+                    {tags.fee === 'yes' && <>Payant. </>}
+                    {tags.intermittent === 'yes' && <>Intermittent. </>}
+                    {tags.seasonal === 'yes' && <>Saisonnier. </>}
+                  </p>
+                )}
+
+                <p className="mt-1.5 text-[11px] italic text-[var(--color-ink-mute)]">
+                  Potabilité et débit non garantis — vérifier sur le terrain.
+                </p>
+
+                {p.lien && (
+                  <p className="mt-2 text-[11px] text-[var(--color-ink-mute)]">
+                    OpenStreetMap : {p.lien}
+                  </p>
+                )}
+              </li>
+            );
+          }
+
+          const places = (p as { places?: { valeur?: number; nb?: number } }).places
+            ?.valeur ??
+            (p as { places?: { valeur?: number; nb?: number } }).places?.nb;
+          const descObj = (p as { description?: { valeur?: string } | string })
+            .description;
           const desc: string =
-            ((p as any).description?.valeur ?? (p as any).description ?? '') as string;
+            typeof descObj === 'string' ? descObj : (descObj?.valeur ?? '');
+          const accessObj = (p as { acces?: { valeur?: string } | string }).acces;
           const access: string =
-            ((p as any).acces?.valeur ?? (p as any).acces ?? '') as string;
-          const equip = Array.isArray((p as any).equipements)
-            ? (p as any).equipements
-                .map((e: any) => e?.valeur ?? e?.nom)
+            typeof accessObj === 'string' ? accessObj : (accessObj?.valeur ?? '');
+          const equipArr = (p as { equipements?: Array<{ valeur?: string; nom?: string }> })
+            .equipements;
+          const equip = Array.isArray(equipArr)
+            ? equipArr
+                .map((e) => e?.valeur ?? e?.nom)
                 .filter(Boolean)
                 .join(', ')
             : '';

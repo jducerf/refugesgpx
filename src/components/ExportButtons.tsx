@@ -9,11 +9,14 @@ const PRINT_STORAGE_KEY = 'refuges-print-payload';
 export function ExportButtons() {
   const trace = useAppStore((s) => s.trace);
   const candidates = useAppStore((s) => s.candidates);
+  const annexCandidates = useAppStore((s) => s.annexCandidates);
   const selectedIds = useAppStore((s) => s.selectedIds);
 
   if (!trace) return null;
 
-  const selectedCandidates = candidates.filter((c) => selectedIds.has(c.id));
+  const selectedCandidates = [...candidates, ...annexCandidates].filter((c) =>
+    selectedIds.has(c.id),
+  );
   const hasSel = selectedCandidates.length > 0;
 
   const handleGpx = () => {
@@ -27,6 +30,7 @@ export function ExportButtons() {
       pois: selectedCandidates.map((c) => ({
         feature: c.feature,
         distM: c.distM,
+        source: c.source,
       })),
     };
     sessionStorage.setItem(PRINT_STORAGE_KEY, JSON.stringify(payload));

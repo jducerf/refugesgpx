@@ -5,6 +5,7 @@ import type {
   ParsedGpx,
   PoiCandidate,
   PoiFeature,
+  PoiSource,
   TraceLineFeature,
 } from './types';
 
@@ -54,6 +55,7 @@ export function filterByDistance(
   line: TraceLineFeature,
   pois: PoiFeature[],
   maxMeters: number,
+  source: PoiSource = 'refuges',
 ): PoiCandidate[] {
   const list: PoiCandidate[] = [];
   for (const f of pois) {
@@ -62,7 +64,7 @@ export function filterByDistance(
     const nearest = turf.nearestPointOnLine(line as Feature<LineString>, f);
     const distKm = nearest.properties.dist as number;
     const distM = distKm * 1000;
-    if (distM <= maxMeters) list.push({ feature: f, distM, id });
+    if (distM <= maxMeters) list.push({ feature: f, distM, id, source });
   }
   list.sort((a, b) => a.distM - b.distM);
   return list;

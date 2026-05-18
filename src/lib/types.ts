@@ -30,10 +30,13 @@ export type PoiFeature = Feature<Point, PoiProperties>;
 export type TraceLineFeature = Feature<LineString>;
 export type BufferPolygonFeature = Feature<Polygon>;
 
+export type PoiSource = 'refuges' | 'osm';
+
 export interface PoiCandidate {
   feature: PoiFeature;
   distM: number;
   id: number;
+  source: PoiSource;
 }
 
 export interface Comment {
@@ -62,7 +65,7 @@ export interface TypeMeta {
   valeurAPI: string;
   color: string;
   /** Clé d'icône Lucide consommée par <TypeIcon /> */
-  iconKey: 'home' | 'tent' | 'bed' | 'droplet' | 'alert';
+  iconKey: 'home' | 'tent' | 'bed' | 'droplet' | 'alert' | 'waves';
   /** Path SVG (inner of <g>) pour marker de carte rasterizé */
   svgPath: string;
 }
@@ -78,6 +81,9 @@ const LUCIDE_PATHS: Record<TypeMeta['iconKey'], string> = {
   droplet: '<path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/>',
   // TriangleAlert
   alert: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+  // Waves (Lucide) — utilisé pour les sources OSM (distinction visuelle vs pt_eau refuges.info)
+  waves:
+    '<path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/>',
 };
 
 export const TYPE_LABELS = {
@@ -121,11 +127,32 @@ export const TYPE_LABELS = {
     iconKey: 'alert',
     svgPath: LUCIDE_PATHS.alert,
   },
+  // ─── Sources annexes ────────────────────────────────────────────
+  osm_water: {
+    id: -1,
+    label: 'Sources / eau (OSM)',
+    valeurAPI: 'osm_water',
+    color: '#4FA8C5', // cyan plus clair que pt_eau (distinction visuelle)
+    iconKey: 'waves',
+    svgPath: LUCIDE_PATHS.waves,
+  },
 } as const satisfies Record<string, TypeMeta>;
 
 export type TypeKey = keyof typeof TYPE_LABELS;
 
 export const ALL_TYPE_KEYS: TypeKey[] = Object.keys(TYPE_LABELS) as TypeKey[];
+
+/** Types issus de refuges.info (filtre principal) */
+export const REFUGES_TYPE_KEYS: TypeKey[] = [
+  'refuge',
+  'cabane',
+  'gite',
+  'pt_eau',
+  'pt_passage',
+];
+
+/** Types issus de sources annexes (toggle séparé, opt-in) */
+export const ANNEX_TYPE_KEYS: TypeKey[] = ['osm_water'];
 
 const VALEUR_TO_META: Record<string, TypeMeta> = Object.fromEntries(
   Object.values(TYPE_LABELS).map((t) => [t.valeurAPI, t]),

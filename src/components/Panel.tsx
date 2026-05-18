@@ -2,6 +2,7 @@ import { Home } from 'lucide-react';
 import { FileDrop } from './FileDrop';
 import { TraceInfo } from './TraceInfo';
 import { Filters } from './Filters';
+import { AnnexSources } from './AnnexSources';
 import { POIList } from './POIList';
 import { ExportButtons } from './ExportButtons';
 import { useAppStore } from '@/store/useAppStore';
@@ -122,6 +123,7 @@ function FilledState() {
     <div className="flex min-h-0 flex-1 flex-col gap-3 px-5 py-4">
       <TraceInfo />
       <Filters />
+      <AnnexSources />
       <POIList />
       <ExportButtons />
     </div>

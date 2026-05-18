@@ -2,7 +2,7 @@ import { Slider } from './ui/Slider';
 import { Checkbox } from './ui/Checkbox';
 import { TypeIcon } from './TypeIcon';
 import { useAppStore } from '@/store/useAppStore';
-import { ALL_TYPE_KEYS, BUFFER_STEPS, TYPE_LABELS, type TypeKey } from '@/lib/types';
+import { BUFFER_STEPS, REFUGES_TYPE_KEYS, TYPE_LABELS, type TypeKey } from '@/lib/types';
 
 export function Filters() {
   const bufferStepIdx = useAppStore((s) => s.bufferStepIdx);
@@ -35,7 +35,7 @@ export function Filters() {
       <div>
         <div className="mb-1.5 text-xs font-medium text-slate-700">Types de POIs</div>
         <div className="grid grid-cols-1 gap-y-1.5 text-sm">
-          {ALL_TYPE_KEYS.map((k) => {
+          {REFUGES_TYPE_KEYS.map((k) => {
             const meta = TYPE_LABELS[k];
             const checked = enabledTypes.has(k);
             return (
