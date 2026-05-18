@@ -13,7 +13,7 @@
 
 ## Pourquoi ?
 
-Les planificateurs grand public (OpenRunner, Komoot, Visorando) ne savent pas afficher les cabanes non gardées, points d'eau et passages délicats — pourtant essentiels pour le randonneur autonome en bivouac.
+Les planificateurs grand public (OpenRunner, Komoot, Visorando) ne savent pas afficher les cabanes non gardées, points d'eau et passages délicats — pourtant essentiels pour les randonneuses et randonneurs autonomes en bivouac.
 
 Cette app **complète** ces outils : tu traces ton parcours là où tu as l'habitude, tu déposes le GPX ici, tu coches les refuges qui t'intéressent (avec accès aux derniers commentaires + photos terrain), et tu repars avec un GPX enrichi prêt à charger dans Komoot/OsmAnd/Gaia/GPS dédié.
 
