@@ -21,6 +21,7 @@ const SHORT_LABEL: Record<TypeKey, string> = {
   pt_passage: 'Passages',
   osm_water: 'Eau OSM',
   c2c_bivouac: 'Bivouacs',
+  osm_shop: 'Ravitaillement',
 };
 
 interface PillProps {

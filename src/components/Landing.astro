@@ -33,12 +33,9 @@
           Votre tracé, <span class="crayon italic">enrichi</span> des <span class="text-[var(--color-accent)]">refuges</span> du coin.
         </h1>
         <p class="rise rise-3 mx-auto mt-7 max-w-2xl text-lg leading-relaxed text-[var(--color-ink-soft)] md:text-xl">
-          Glissez le GPX préparé dans votre planificateur habituel. L'app pioche dans la base
-          <a href="https://www.refuges.info" target="_blank" rel="noopener" class="underline decoration-[var(--color-trail)] decoration-2 underline-offset-4 hover:text-[var(--color-accent)]">refuges.info</a> les
-          cabanes, refuges, gîtes et points d'eau à proximité — avec en option les points d'eau
-          <a href="https://www.openstreetmap.org" target="_blank" rel="noopener" class="underline decoration-[var(--color-trail)] decoration-2 underline-offset-4 hover:text-[var(--color-accent)]">OpenStreetMap</a>
-          et les bivouacs <a href="https://www.camptocamp.org" target="_blank" rel="noopener" class="underline decoration-[var(--color-trail)] decoration-2 underline-offset-4 hover:text-[var(--color-accent)]">Camptocamp</a> —
-          et vous repartez avec un GPX enrichi + un topo PDF, prêts pour le bivouac.
+          Déposez votre GPX. L'app repère refuges, cabanes, gîtes, points d'eau et ravitaillement
+          à proximité du tracé. Vous repartez avec un GPX enrichi et un topo PDF, prêts pour le
+          bivouac.
         </p>
 
         <div class="rise rise-4 mt-9 flex flex-wrap items-center justify-center gap-5">
@@ -164,9 +161,10 @@
           <h3 class="font-display mt-4 text-2xl font-semibold text-[var(--color-ink)]">Ajustez la distance</h3>
           <p class="mt-3 text-[var(--color-ink-soft)]">
             Un curseur entre <span class="font-mono text-sm">100 m</span> et
-            <span class="font-mono text-sm">5 km</span>. L'app affiche les refuges, cabanes, gîtes
-            et points d'eau dans le rayon choisi, avec leur distance au tracé et leurs derniers
-            commentaires terrain.
+            <span class="font-mono text-sm">5 km</span>. L'app affiche refuges gardés, cabanes,
+            gîtes, points d'eau et passages délicats dans le rayon choisi, avec distance au tracé,
+            altitude, places disponibles et commentaires récents. <strong>Bivouacs</strong> et
+            <strong>ravitaillement en village</strong> activables en option.
           </p>
         </article>
 
@@ -202,19 +200,27 @@
       <ul class="space-y-5">
         <li class="border-l-2 pl-5" style="border-color: #B85C38">
           <div class="font-display text-xl font-semibold text-[var(--color-ink)]">Refuges gardés et gîtes d'étape</div>
-          <p class="mt-1 text-[var(--color-ink-soft)]">Réservations, capacité, période d'ouverture — l'info que vous cherchiez à recouper.</p>
+          <p class="mt-1 text-[var(--color-ink-soft)]">Réservations, capacité, période d'ouverture, gardien — l'info que vous cherchiez à recouper, avec les derniers commentaires de la communauté.</p>
         </li>
         <li class="border-l-2 pl-5" style="border-color: #5E6F4A">
           <div class="font-display text-xl font-semibold text-[var(--color-ink)]">Cabanes non gardées</div>
-          <p class="mt-1 text-[var(--color-ink-soft)]">Le couchage de secours, l'état du toit, le poêle, l'eau à proximité — par la communauté qui y est passée ce mois-ci.</p>
+          <p class="mt-1 text-[var(--color-ink-soft)]">Couchage de secours, état du toit, poêle, eau à proximité — par celles et ceux qui y sont passés ce mois-ci.</p>
+        </li>
+        <li class="border-l-2 pl-5" style="border-color: #8B6F47">
+          <div class="font-display text-xl font-semibold text-[var(--color-ink)]">Emplacements de bivouac</div>
+          <p class="mt-1 text-[var(--color-ink-soft)]">Spots documentés par la communauté Camptocamp — altitude, exposition, accès à l'eau — pour les traversées hors refuges.</p>
         </li>
         <li class="border-l-2 pl-5" style="border-color: #2C7DA0">
-          <div class="font-display text-xl font-semibold text-[var(--color-ink)]">Points d'eau &amp; ravitos</div>
-          <p class="mt-1 text-[var(--color-ink-soft)]">Sources, fontaines, captages — ceux qui décident où s'arrêter en plein été.</p>
+          <div class="font-display text-xl font-semibold text-[var(--color-ink)]">Points d'eau</div>
+          <p class="mt-1 text-[var(--color-ink-soft)]">Sources, fontaines, robinets, puits, captages — ceux qui décident où s'arrêter en plein été, complétés par OpenStreetMap loin des refuges.</p>
+        </li>
+        <li class="border-l-2 pl-5" style="border-color: #0F766E">
+          <div class="font-display text-xl font-semibold text-[var(--color-ink)]">Ravitaillement en village</div>
+          <p class="mt-1 text-[var(--color-ink-soft)]">Supermarchés, épiceries, boulangeries, boucheries, marchés — pour repérer où refaire le sac sur une traversée multi-jours.</p>
         </li>
         <li class="border-l-2 pl-5" style="border-color: #DDA853">
           <div class="font-display text-xl font-semibold text-[var(--color-ink)]">Passages délicats</div>
-          <p class="mt-1 text-[var(--color-ink-soft)]">Pas d'escalade, vires, traversées exposées — repérés en amont pour préparer le matériel.</p>
+          <p class="mt-1 text-[var(--color-ink-soft)]">Pas d'escalade, vires, traversées exposées — repérés en amont pour préparer le matériel et le timing.</p>
         </li>
       </ul>
     </div>
@@ -280,7 +286,7 @@
 
         <div>
           <p class="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-ink-mute)]">Sources annexes — opt-in dans l'app</p>
-          <div class="mt-3 grid gap-8 md:grid-cols-2">
+          <div class="mt-3 grid gap-8 md:grid-cols-3">
             <div>
               <div class="font-display text-xl font-semibold text-[var(--color-ink)]">OpenStreetMap — points d'eau</div>
               <p class="mt-2 text-[var(--color-ink-soft)]">
@@ -288,6 +294,14 @@
                 via <a href="https://overpass-api.de" target="_blank" rel="noopener" class="underline decoration-[var(--color-accent)] underline-offset-2 hover:text-[var(--color-accent)]">Overpass API</a>,
                 pour compléter le maillage hydrique loin des refuges.
                 <br /><span class="text-sm text-[var(--color-ink-mute)]">ODbL · à vérifier sur le terrain</span>
+              </p>
+            </div>
+            <div>
+              <div class="font-display text-xl font-semibold text-[var(--color-ink)]">OpenStreetMap — ravitaillement</div>
+              <p class="mt-2 text-[var(--color-ink-soft)]">
+                Supermarchés, épiceries, boulangeries, boucheries et marchés en village,
+                pour repérer les points de ravito sur les traversées multi-jours.
+                <br /><span class="text-sm text-[var(--color-ink-mute)]">ODbL · horaires à recouper</span>
               </p>
             </div>
             <div>

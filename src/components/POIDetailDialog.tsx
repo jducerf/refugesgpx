@@ -398,13 +398,21 @@ function OSMDetailDialog({
 }) {
   const f = candidate.feature;
   const p = f.properties as Record<string, unknown>;
-  const nom = (p.nom as string) ?? "Point d'eau (OSM)";
-  const meta = getTypeMeta('osm_water');
+  // Le typeKey distingue les sous-genres OSM (eau, commerce…) — il pilote le
+  // meta de marker, le libellé de fallback et l'avertissement terrain.
+  const typeKey = (p.type as { valeur?: string } | undefined)?.valeur === 'osm_shop'
+    ? 'osm_shop'
+    : 'osm_water';
+  const isShop = typeKey === 'osm_shop';
+  const nomFallback = isShop ? 'Commerce (OSM)' : "Point d'eau (OSM)";
+  const nom = (p.nom as string) ?? nomFallback;
+  const meta = getTypeMeta(typeKey);
   const alt = (p.coord as { alt?: number } | undefined)?.alt;
   const tags = (p.osmTags as Record<string, string> | undefined) ?? {};
   const subtype = p.osmSubtype as string | undefined;
   const link = (p.lien as string | undefined) ?? '';
   const osmId = p.osmId as number | undefined;
+  const osmType = (p.osmType as 'node' | 'way' | undefined) ?? 'node';
 
   // Filtrer les tags pour affichage : exclure techniques + ceux déjà rendus
   const renderedTags = Object.entries(tags).filter(([k]) => {
@@ -413,6 +421,8 @@ function OSMDetailDialog({
     if (k.startsWith('source:')) return false;
     if (k.startsWith('addr:')) return false;
     if (k === 'check_date' || k.startsWith('survey:')) return false;
+    // Shops : on cache le tag structurant déjà rendu via le sous-titre.
+    if (isShop && (k === 'shop' || k === 'amenity')) return false;
     return true;
   });
 
@@ -455,8 +465,10 @@ function OSMDetailDialog({
         )}
 
         <div className="rounded bg-amber-50 px-2 py-1.5 text-[11px] text-amber-800">
-          <b>À vérifier sur le terrain :</b> la potabilité et le débit ne sont pas
-          garantis. Les données OSM sont contribuées par la communauté.
+          <b>À vérifier sur le terrain :</b>{' '}
+          {isShop
+            ? 'horaires et ouverture saisonnière variables, surtout en village de montagne. Données contribuées par la communauté OSM.'
+            : 'la potabilité et le débit ne sont pas garantis. Les données OSM sont contribuées par la communauté.'}
         </div>
 
         {link && (
@@ -466,7 +478,7 @@ function OSMDetailDialog({
             rel="noopener"
             className="inline-flex items-center gap-1 text-sm text-blue-700 hover:underline"
           >
-            Voir sur OpenStreetMap{osmId ? ` (node ${osmId})` : ''}{' '}
+            Voir sur OpenStreetMap{osmId ? ` (${osmType} ${osmId})` : ''}{' '}
             <ExternalLink className="h-3 w-3" />
           </a>
         )}

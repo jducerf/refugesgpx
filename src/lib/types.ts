@@ -65,7 +65,7 @@ export interface TypeMeta {
   valeurAPI: string;
   color: string;
   /** Clé d'icône Lucide consommée par <TypeIcon /> */
-  iconKey: 'home' | 'tent' | 'bed' | 'droplet' | 'alert' | 'waves' | 'mountain';
+  iconKey: 'home' | 'tent' | 'bed' | 'droplet' | 'alert' | 'waves' | 'mountain' | 'bag';
   /** Path SVG (inner of <g>) pour marker de carte rasterizé */
   svgPath: string;
 }
@@ -86,6 +86,8 @@ const LUCIDE_PATHS: Record<TypeMeta['iconKey'], string> = {
     '<path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/>',
   // Mountain (Lucide) — utilisé pour les bivouacs Camptocamp
   mountain: '<path d="m8 3 4 8 5-5 5 15H2L8 3z"/>',
+  // ShoppingBag (Lucide) — ravitaillement / commerces OSM en village
+  bag: '<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>',
 };
 
 export const TYPE_LABELS = {
@@ -146,6 +148,14 @@ export const TYPE_LABELS = {
     iconKey: 'mountain',
     svgPath: LUCIDE_PATHS.mountain,
   },
+  osm_shop: {
+    id: -3,
+    label: 'Ravitaillement (OSM)',
+    valeurAPI: 'osm_shop',
+    color: '#0F766E', // teal foncé, distinct du bleu eau et du brun bivouac
+    iconKey: 'bag',
+    svgPath: LUCIDE_PATHS.bag,
+  },
 } as const satisfies Record<string, TypeMeta>;
 
 export type TypeKey = keyof typeof TYPE_LABELS;
@@ -162,7 +172,7 @@ export const REFUGES_TYPE_KEYS: TypeKey[] = [
 ];
 
 /** Types issus de sources annexes (toggle séparé, opt-in) */
-export const ANNEX_TYPE_KEYS: TypeKey[] = ['osm_water', 'c2c_bivouac'];
+export const ANNEX_TYPE_KEYS: TypeKey[] = ['osm_water', 'c2c_bivouac', 'osm_shop'];
 
 const VALEUR_TO_META: Record<string, TypeMeta> = Object.fromEntries(
   Object.values(TYPE_LABELS).map((t) => [t.valeurAPI, t]),

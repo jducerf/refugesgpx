@@ -11,7 +11,7 @@ import {
   traceToLine,
 } from '@/lib/geo';
 import { fetchPOIsInBbox } from '@/lib/refuges-api';
-import { fetchWaterPointsOSM } from '@/lib/overpass-api';
+import { fetchWaterPointsOSM, fetchShopsOSM } from '@/lib/overpass-api';
 import { fetchBivouacsC2C } from '@/lib/camptocamp-api';
 import { BUFFER_STEPS, TYPE_LABELS, type TypeKey } from '@/lib/types';
 import type { PoiCandidate } from '@/lib/types';
@@ -264,6 +264,7 @@ export function MapView() {
 
     const wantWater = enabledAnnexTypes.has('osm_water' as TypeKey);
     const wantBivouac = enabledAnnexTypes.has('c2c_bivouac' as TypeKey);
+    const wantShop = enabledAnnexTypes.has('osm_shop' as TypeKey);
 
     const tasks: Promise<PoiCandidate[]>[] = [];
     if (wantWater) {
@@ -277,6 +278,13 @@ export function MapView() {
       tasks.push(
         fetchBivouacsC2C(bbox, ctrl.signal).then((pois) =>
           filterByDistance(line, pois, bufferM, 'c2c'),
+        ),
+      );
+    }
+    if (wantShop) {
+      tasks.push(
+        fetchShopsOSM(bbox, ctrl.signal).then((pois) =>
+          filterByDistance(line, pois, bufferM, 'osm'),
         ),
       );
     }
