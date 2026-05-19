@@ -33,9 +33,11 @@
           Votre tracé, <span class="crayon italic">enrichi</span> des <span class="text-[var(--color-accent)]">refuges</span> du coin.
         </h1>
         <p class="rise rise-3 mx-auto mt-7 max-w-2xl text-lg leading-relaxed text-[var(--color-ink-soft)] md:text-xl">
-          Déposez votre GPX. L'app repère refuges, cabanes, gîtes, points d'eau et ravitaillement
-          à proximité du tracé. Vous repartez avec un GPX enrichi et un topo PDF, prêts pour le
-          bivouac.
+          Déposez votre GPX. L'app repère ce qui compte le long du tracé —
+          <strong>où dormir</strong>, <strong>où boire</strong>,
+          <strong>où ravitailler</strong>, <strong>comment arriver et repartir</strong>,
+          <strong>où faire attention</strong>. Vous repartez avec un GPX enrichi et un topo
+          PDF, prêts pour le bivouac.
         </p>
 
         <div class="rise rise-4 mt-9 flex flex-wrap items-center justify-center gap-5">
@@ -163,8 +165,9 @@
             Un curseur entre <span class="font-mono text-sm">100 m</span> et
             <span class="font-mono text-sm">5 km</span>. L'app affiche refuges gardés, cabanes,
             gîtes, points d'eau et passages délicats dans le rayon choisi, avec distance au tracé,
-            altitude, places disponibles et commentaires récents. <strong>Bivouacs</strong> et
-            <strong>ravitaillement en village</strong> activables en option.
+            altitude, places disponibles et commentaires récents. <strong>Bivouacs</strong>,
+            <strong>hébergements payants</strong>, <strong>transports</strong> et
+            <strong>services en village</strong> activables en option.
           </p>
         </article>
 
@@ -199,27 +202,23 @@
 
       <ul class="space-y-5">
         <li class="border-l-2 pl-5" style="border-color: #B85C38">
-          <div class="font-display text-xl font-semibold text-[var(--color-ink)]">Refuges gardés et gîtes d'étape</div>
-          <p class="mt-1 text-[var(--color-ink-soft)]">Réservations, capacité, période d'ouverture, gardien — l'info que vous cherchiez à recouper, avec les derniers commentaires de la communauté.</p>
-        </li>
-        <li class="border-l-2 pl-5" style="border-color: #5E6F4A">
-          <div class="font-display text-xl font-semibold text-[var(--color-ink)]">Cabanes non gardées</div>
-          <p class="mt-1 text-[var(--color-ink-soft)]">Couchage de secours, état du toit, poêle, eau à proximité — par celles et ceux qui y sont passés ce mois-ci.</p>
-        </li>
-        <li class="border-l-2 pl-5" style="border-color: #8B6F47">
-          <div class="font-display text-xl font-semibold text-[var(--color-ink)]">Emplacements de bivouac</div>
-          <p class="mt-1 text-[var(--color-ink-soft)]">Spots documentés par la communauté Camptocamp — altitude, exposition, accès à l'eau — pour les traversées hors refuges.</p>
+          <div class="font-display text-xl font-semibold text-[var(--color-ink)]">Dormir</div>
+          <p class="mt-1 text-[var(--color-ink-soft)]">Refuges gardés, cabanes non gardées, gîtes d'étape, bivouacs, chambres d'hôtes, campings, auberges et hôtels — selon que vous voulez du sec, du libre, ou un repli au village.</p>
         </li>
         <li class="border-l-2 pl-5" style="border-color: #2C7DA0">
-          <div class="font-display text-xl font-semibold text-[var(--color-ink)]">Points d'eau</div>
-          <p class="mt-1 text-[var(--color-ink-soft)]">Sources, fontaines, robinets, puits, captages — ceux qui décident où s'arrêter en plein été, complétés par OpenStreetMap loin des refuges.</p>
+          <div class="font-display text-xl font-semibold text-[var(--color-ink)]">Boire</div>
+          <p class="mt-1 text-[var(--color-ink-soft)]">Sources, fontaines, robinets, abreuvoirs et bornes d'eau potable — ceux qui décident où s'arrêter en plein été.</p>
         </li>
         <li class="border-l-2 pl-5" style="border-color: #0F766E">
-          <div class="font-display text-xl font-semibold text-[var(--color-ink)]">Ravitaillement en village</div>
-          <p class="mt-1 text-[var(--color-ink-soft)]">Supermarchés, épiceries, boulangeries, boucheries, marchés — pour repérer où refaire le sac sur une traversée multi-jours.</p>
+          <div class="font-display text-xl font-semibold text-[var(--color-ink)]">Service en village</div>
+          <p class="mt-1 text-[var(--color-ink-soft)]">Supermarchés, épiceries, boulangeries, pharmacies, distributeurs et toilettes publiques — pour le ravito, le dépannage et la halte à couvert sur les traversées multi-jours.</p>
+        </li>
+        <li class="border-l-2 pl-5" style="border-color: #4338CA">
+          <div class="font-display text-xl font-semibold text-[var(--color-ink)]">Arriver, repartir</div>
+          <p class="mt-1 text-[var(--color-ink-soft)]">Gares de voyageurs, arrêts de bus, cars et navettes estivales — pour préparer l'accès au sentier sans voiture, y compris dans les vallées où le train ne va pas.</p>
         </li>
         <li class="border-l-2 pl-5" style="border-color: #DDA853">
-          <div class="font-display text-xl font-semibold text-[var(--color-ink)]">Passages délicats</div>
+          <div class="font-display text-xl font-semibold text-[var(--color-ink)]">Attention</div>
           <p class="mt-1 text-[var(--color-ink-soft)]">Pas d'escalade, vires, traversées exposées — repérés en amont pour préparer le matériel et le timing.</p>
         </li>
       </ul>
@@ -259,12 +258,12 @@
     <div class="mx-auto max-w-6xl px-6 py-16 md:py-20">
       <p class="section-num">Données & crédits</p>
       <h2 class="font-display mt-3 text-3xl font-semibold leading-tight text-[var(--color-ink)] md:text-4xl">
-        Tout part du travail bénévole de la communauté.
+        Tout part de données ouvertes — communauté et institutions publiques.
       </h2>
 
-      <div class="mt-10 space-y-10">
+      <div class="mt-10 space-y-12">
         <div>
-          <p class="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-ink-mute)]">Source principale</p>
+          <p class="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-ink-mute)]">Sources principales</p>
           <div class="mt-3 grid gap-8 md:grid-cols-2">
             <div>
               <div class="font-display text-xl font-semibold text-[var(--color-ink)]">refuges.info</div>
@@ -285,51 +284,90 @@
         </div>
 
         <div>
-          <p class="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-ink-mute)]">Sources annexes — opt-in dans l'app</p>
-          <div class="mt-3 grid gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+          <p class="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-ink-mute)]">Sources annexes — opt-in, classées par besoin</p>
+
+          <div class="mt-6 space-y-8">
+            <!-- DORMIR -->
             <div>
-              <div class="font-display text-xl font-semibold text-[var(--color-ink)]">OpenStreetMap — points d'eau</div>
-              <p class="mt-2 text-[var(--color-ink-soft)]">
-                Sources, fontaines, abreuvoirs et bornes d'eau potable interrogés en temps réel
-                via <a href="https://overpass-api.de" target="_blank" rel="noopener" class="underline decoration-[var(--color-accent)] underline-offset-2 hover:text-[var(--color-accent)]">Overpass API</a>,
-                pour compléter le maillage hydrique loin des refuges.
-                <br /><span class="text-sm text-[var(--color-ink-mute)]">ODbL · à vérifier sur le terrain</span>
-              </p>
+              <p class="font-display text-sm font-semibold uppercase tracking-wider" style="color: #B85C38">Dormir</p>
+              <div class="mt-3 grid gap-8 md:grid-cols-2">
+                <div>
+                  <div class="font-display text-xl font-semibold text-[var(--color-ink)]">Camptocamp — bivouacs</div>
+                  <p class="mt-2 text-[var(--color-ink-soft)]">
+                    Emplacements de bivouac documentés par la communauté
+                    <a href="https://www.camptocamp.org" target="_blank" rel="noopener" class="underline decoration-[var(--color-accent)] underline-offset-2 hover:text-[var(--color-accent)]">camptocamp.org</a> —
+                    pratique pour les traversées hors refuges.
+                    <br /><span class="text-sm text-[var(--color-ink-mute)]">CC BY-SA 3.0 / 4.0</span>
+                  </p>
+                </div>
+                <div>
+                  <div class="font-display text-xl font-semibold text-[var(--color-ink)]">DATAtourisme — hébergements</div>
+                  <p class="mt-2 text-[var(--color-ink-soft)]">
+                    Gîtes d'étape, chambres d'hôtes, campings, hôtels et auberges agrégés par
+                    <a href="https://www.datatourisme.fr" target="_blank" rel="noopener" class="underline decoration-[var(--color-accent)] underline-offset-2 hover:text-[var(--color-accent)]">DATAtourisme</a>
+                    (réseau ADN Tourisme), pour trouver un repli à toute étape — y compris en cas de météo qui tourne.
+                    <br /><span class="text-sm text-[var(--color-ink-mute)]">Licence Ouverte / Etalab · ouvertures à recouper</span>
+                  </p>
+                </div>
+              </div>
             </div>
+
+            <!-- BOIRE -->
             <div>
-              <div class="font-display text-xl font-semibold text-[var(--color-ink)]">OpenStreetMap — ravitaillement</div>
-              <p class="mt-2 text-[var(--color-ink-soft)]">
-                Supermarchés, épiceries, boulangeries, boucheries et marchés en village,
-                pour repérer les points de ravito sur les traversées multi-jours.
-                <br /><span class="text-sm text-[var(--color-ink-mute)]">ODbL · horaires à recouper</span>
-              </p>
+              <p class="font-display text-sm font-semibold uppercase tracking-wider" style="color: #2C7DA0">Boire</p>
+              <div class="mt-3 grid gap-8 md:grid-cols-2">
+                <div>
+                  <div class="font-display text-xl font-semibold text-[var(--color-ink)]">OpenStreetMap — points d'eau</div>
+                  <p class="mt-2 text-[var(--color-ink-soft)]">
+                    Sources, fontaines, abreuvoirs et bornes d'eau potable interrogés en temps réel
+                    via <a href="https://overpass-api.de" target="_blank" rel="noopener" class="underline decoration-[var(--color-accent)] underline-offset-2 hover:text-[var(--color-accent)]">Overpass API</a>,
+                    pour compléter le maillage hydrique loin des refuges.
+                    <br /><span class="text-sm text-[var(--color-ink-mute)]">ODbL · à vérifier sur le terrain</span>
+                  </p>
+                </div>
+              </div>
             </div>
+
+            <!-- SERVICE EN VILLAGE -->
             <div>
-              <div class="font-display text-xl font-semibold text-[var(--color-ink)]">Camptocamp — bivouacs</div>
-              <p class="mt-2 text-[var(--color-ink-soft)]">
-                Emplacements de bivouac documentés par la communauté
-                <a href="https://www.camptocamp.org" target="_blank" rel="noopener" class="underline decoration-[var(--color-accent)] underline-offset-2 hover:text-[var(--color-accent)]">camptocamp.org</a> —
-                pratique pour les traversées hors refuges.
-                <br /><span class="text-sm text-[var(--color-ink-mute)]">CC BY-SA 3.0 / 4.0</span>
-              </p>
+              <p class="font-display text-sm font-semibold uppercase tracking-wider" style="color: #0F766E">Service en village</p>
+              <div class="mt-3 grid gap-8 md:grid-cols-2">
+                <div>
+                  <div class="font-display text-xl font-semibold text-[var(--color-ink)]">OpenStreetMap — commerces & services</div>
+                  <p class="mt-2 text-[var(--color-ink-soft)]">
+                    Supermarchés, épiceries, boulangeries, pharmacies, distributeurs et toilettes
+                    publiques interrogés via
+                    <a href="https://overpass-api.de" target="_blank" rel="noopener" class="underline decoration-[var(--color-accent)] underline-offset-2 hover:text-[var(--color-accent)]">Overpass API</a> —
+                    pour repérer ravito, dépannage et halte à couvert sur les traversées multi-jours.
+                    <br /><span class="text-sm text-[var(--color-ink-mute)]">ODbL · horaires à recouper</span>
+                  </p>
+                </div>
+              </div>
             </div>
+
+            <!-- TRANSPORT -->
             <div>
-              <div class="font-display text-xl font-semibold text-[var(--color-ink)]">SNCF — gares de voyageurs</div>
-              <p class="mt-2 text-[var(--color-ink-soft)]">
-                Les 2&nbsp;782 gares voyageurs françaises, depuis l'export officiel
-                <a href="https://www.data.gouv.fr/datasets/gares-de-voyageurs-1" target="_blank" rel="noopener" class="underline decoration-[var(--color-accent)] underline-offset-2 hover:text-[var(--color-accent)]">data.gouv.fr</a>,
-                pour préparer le départ et le retour en train.
-                <br /><span class="text-sm text-[var(--color-ink-mute)]">Licence Ouverte v2 / Etalab</span>
-              </p>
-            </div>
-            <div>
-              <div class="font-display text-xl font-semibold text-[var(--color-ink)]">DATAtourisme — hébergements</div>
-              <p class="mt-2 text-[var(--color-ink-soft)]">
-                Gîtes d'étape, chambres d'hôtes, campings, hôtels et auberges agrégés par
-                <a href="https://www.datatourisme.fr" target="_blank" rel="noopener" class="underline decoration-[var(--color-accent)] underline-offset-2 hover:text-[var(--color-accent)]">DATAtourisme</a>
-                (réseau ADN Tourisme), pour trouver un repli à toute étape — y compris en cas de météo qui tourne.
-                <br /><span class="text-sm text-[var(--color-ink-mute)]">Licence Ouverte / Etalab · ouvertures à recouper</span>
-              </p>
+              <p class="font-display text-sm font-semibold uppercase tracking-wider" style="color: #4338CA">Arriver, repartir</p>
+              <div class="mt-3 grid gap-8 md:grid-cols-2">
+                <div>
+                  <div class="font-display text-xl font-semibold text-[var(--color-ink)]">SNCF — gares de voyageurs</div>
+                  <p class="mt-2 text-[var(--color-ink-soft)]">
+                    Les 2&nbsp;782 gares voyageurs françaises, depuis l'export officiel
+                    <a href="https://www.data.gouv.fr/datasets/gares-de-voyageurs-1" target="_blank" rel="noopener" class="underline decoration-[var(--color-accent)] underline-offset-2 hover:text-[var(--color-accent)]">data.gouv.fr</a>,
+                    pour préparer le départ et le retour en train.
+                    <br /><span class="text-sm text-[var(--color-ink-mute)]">Licence Ouverte v2 / Etalab</span>
+                  </p>
+                </div>
+                <div>
+                  <div class="font-display text-xl font-semibold text-[var(--color-ink)]">transport.data.gouv.fr — arrêts bus & cars</div>
+                  <p class="mt-2 text-[var(--color-ink-soft)]">
+                    368 000 arrêts de bus, cars, navettes estivales et TER routier publiés via le
+                    <a href="https://transport.data.gouv.fr/datasets/arrets-de-transport-en-france" target="_blank" rel="noopener" class="underline decoration-[var(--color-accent)] underline-offset-2 hover:text-[var(--color-accent)]">Point d'Accès National</a>
+                    (agrégat des GTFS publics), pour préparer l'accès au sentier quand le train s'arrête trop loin.
+                    <br /><span class="text-sm text-[var(--color-ink-mute)]">Licence Ouverte v2 / Etalab</span>
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -350,14 +388,11 @@
   <footer class="border-t border-[var(--color-paper-deep)] bg-[var(--color-paper)]">
     <div class="mx-auto flex max-w-6xl flex-col items-start justify-between gap-3 px-6 py-8 text-sm text-[var(--color-ink-mute)] md:flex-row md:items-center">
       <p>
-        Données © <a href="https://www.refuges.info" target="_blank" rel="noopener" class="underline">refuges.info</a> (CC BY-SA 2.0)
-        · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener" class="underline">OpenStreetMap</a> (ODbL — fond + Overpass)
-        · <a href="https://www.camptocamp.org" target="_blank" rel="noopener" class="underline">Camptocamp</a> (CC BY-SA)
-        · <a href="https://www.data.gouv.fr/datasets/gares-de-voyageurs-1" target="_blank" rel="noopener" class="underline">SNCF gares</a> (LOV2)
-        · <a href="https://www.datatourisme.fr" target="_blank" rel="noopener" class="underline">DATAtourisme</a> (Licence Ouverte) · Code MIT
+        Données en licences ouvertes · code <a href="https://github.com/yoanbernabeu/refugesgpx" target="_blank" rel="noopener" class="underline hover:text-[var(--color-ink-soft)]">MIT</a>
+        · <a href="#donnees" class="underline hover:text-[var(--color-ink-soft)]">crédits</a>
       </p>
       <p>
-        Une création de <a href="https://yoandev.co" target="_blank" rel="noopener" class="underline">yoandev.co</a>
+        Une création de <a href="https://yoandev.co" target="_blank" rel="noopener" class="underline hover:text-[var(--color-ink-soft)]">yoandev.co</a>
       </p>
     </div>
   </footer>
