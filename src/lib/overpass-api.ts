@@ -6,6 +6,7 @@ import { osmSubtitle } from './osm-i18n';
 const OVERPASS_ENDPOINT = 'https://overpass-api.de/api/interpreter';
 const CACHE_PREFIX_WATER = 'osm-water';
 const CACHE_PREFIX_SHOP = 'osm-shop';
+const CACHE_PREFIX_AMENITY = 'osm-amenity';
 
 // Décalage appliqué aux ways OSM pour qu'ils ne collisionnent jamais avec les
 // nodes (négatif aussi) ni avec refuges.info (positifs) ni c2c (positifs avec
@@ -230,5 +231,112 @@ out tags center;`;
   }
 
   await writeCache(CACHE_PREFIX_SHOP, cacheKey, features);
+  return features;
+}
+
+// ─── Amenities OSM (pharmacy / atm / toilets) ──────────────────────────
+
+/** Tag amenity OSM → TypeKey applicatif. */
+const AMENITY_TO_TYPE: Record<string, { valeur: string; typeId: number; nomFallback: string }> = {
+  pharmacy: { valeur: 'osm_pharmacy', typeId: -6, nomFallback: 'Pharmacie' },
+  atm: { valeur: 'osm_atm', typeId: -7, nomFallback: 'Distributeur' },
+  toilets: { valeur: 'osm_toilets', typeId: -8, nomFallback: 'Toilettes' },
+};
+
+/**
+ * Récupère pharmacies, distributeurs et toilettes publiques OSM dans une
+ * bbox via Overpass. Tout est groupé en une seule requête pour économiser
+ * un aller-retour par catégorie (Overpass facture surtout le round-trip).
+ *
+ * Le filtre par sous-catégorie (l'utilisateur peut n'activer que pharmacies
+ * sans ATM) se fait ensuite côté MapView via `enabledAnnexTypes`.
+ *
+ * Comme pour les commerces, ces amenities sont souvent des ways (footprints
+ * de bâtiments), d'où `out tags center` et l'offset d'ID pour ways.
+ */
+export async function fetchAmenitiesOSM(
+  bbox: Bbox,
+  signal?: AbortSignal,
+): Promise<PoiFeature[]> {
+  const cacheKey = bboxToGridKey(bbox);
+  const cached = await readCache<PoiFeature[]>(CACHE_PREFIX_AMENITY, cacheKey, TTL.BBOX);
+  if (cached) return cached;
+
+  const [gw, gs, ge, gn] = cacheKey.split(',').map(Number) as Bbox;
+  const overpassBbox = `${gs},${gw},${gn},${ge}`;
+  const amenityFilter = Object.keys(AMENITY_TO_TYPE).join('|');
+
+  const query = `[out:json][timeout:25];
+(
+  node["amenity"~"^(${amenityFilter})$"](${overpassBbox});
+  way["amenity"~"^(${amenityFilter})$"](${overpassBbox});
+);
+out tags center;`;
+
+  const r = await fetch(OVERPASS_ENDPOINT, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ data: query }).toString(),
+    signal,
+  });
+  if (!r.ok) throw new Error(`Overpass API → ${r.status}`);
+
+  const json = await r.json();
+  const parsed = OverpassResponseSchema.parse(json);
+
+  const features: PoiFeature[] = [];
+  for (const el of parsed.elements) {
+    let osmId: number;
+    let osmType: 'node' | 'way';
+    let lat: number;
+    let lon: number;
+    let tags: Record<string, string>;
+
+    if (el.type === 'node') {
+      const safe = NodeSchema.safeParse(el);
+      if (!safe.success) continue;
+      osmId = safe.data.id;
+      osmType = 'node';
+      lat = safe.data.lat;
+      lon = safe.data.lon;
+      tags = (safe.data.tags ?? {}) as Record<string, string>;
+    } else if (el.type === 'way') {
+      const safe = WayWithCenterSchema.safeParse(el);
+      if (!safe.success) continue;
+      osmId = safe.data.id;
+      osmType = 'way';
+      lat = safe.data.center.lat;
+      lon = safe.data.center.lon;
+      tags = (safe.data.tags ?? {}) as Record<string, string>;
+    } else {
+      continue;
+    }
+
+    const amenity = tags.amenity;
+    const meta = amenity ? AMENITY_TO_TYPE[amenity] : undefined;
+    if (!meta) continue;
+
+    const localId = osmType === 'way' ? -(osmId + OSM_WAY_OFFSET) : -osmId;
+    const nom = tags.name ?? meta.nomFallback;
+    const subtype = osmSubtitle(tags);
+
+    features.push({
+      type: 'Feature',
+      id: localId,
+      geometry: { type: 'Point', coordinates: [lon, lat] },
+      properties: {
+        id: localId,
+        nom,
+        type: { id: meta.typeId, valeur: meta.valeur },
+        lien: `https://www.openstreetmap.org/${osmType}/${osmId}`,
+        osmTags: tags,
+        osmSubtype: subtype,
+        osmId,
+        osmType,
+      },
+    } as unknown as PoiFeature);
+  }
+
+  await writeCache(CACHE_PREFIX_AMENITY, cacheKey, features);
   return features;
 }

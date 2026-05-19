@@ -11,7 +11,7 @@ import {
   traceToLine,
 } from '@/lib/geo';
 import { fetchPOIsInBbox } from '@/lib/refuges-api';
-import { fetchWaterPointsOSM, fetchShopsOSM } from '@/lib/overpass-api';
+import { fetchWaterPointsOSM, fetchShopsOSM, fetchAmenitiesOSM } from '@/lib/overpass-api';
 import { fetchBivouacsC2C } from '@/lib/camptocamp-api';
 import { fetchGaresSNCF } from '@/lib/transports-api';
 import { fetchDatatourismeLodging } from '@/lib/datatourisme-api';
@@ -359,6 +359,10 @@ export function MapView() {
     const wantShop = enabledAnnexTypes.has('osm_shop' as TypeKey);
     const wantGare = enabledAnnexTypes.has('sncf_gare' as TypeKey);
     const wantLodging = enabledAnnexTypes.has('dt_lodging' as TypeKey);
+    const wantPharmacy = enabledAnnexTypes.has('osm_pharmacy' as TypeKey);
+    const wantAtm = enabledAnnexTypes.has('osm_atm' as TypeKey);
+    const wantToilets = enabledAnnexTypes.has('osm_toilets' as TypeKey);
+    const wantAmenities = wantPharmacy || wantAtm || wantToilets;
 
     const tasks: Promise<PoiCandidate[]>[] = [];
     if (wantWater) {
@@ -380,6 +384,25 @@ export function MapView() {
         fetchShopsOSM(bbox, ctrl.signal).then((pois) =>
           filterByDistance(line, pois, bufferM, 'osm'),
         ),
+      );
+    }
+    if (wantAmenities) {
+      // Une seule requête Overpass pour pharmacies / ATM / toilettes ; le filtre
+      // par sous-catégorie (l'utilisateur peut n'avoir activé que les pharmacies)
+      // se fait après réception, sur la valeur `type.valeur` portée par chaque
+      // feature. Évite trois aller-retours Overpass pour gagner deux secondes
+      // de fetch quand les trois sont activés.
+      tasks.push(
+        fetchAmenitiesOSM(bbox, ctrl.signal).then((pois) => {
+          const filtered = pois.filter((f) => {
+            const v = f.properties.type?.valeur;
+            if (v === 'osm_pharmacy') return wantPharmacy;
+            if (v === 'osm_atm') return wantAtm;
+            if (v === 'osm_toilets') return wantToilets;
+            return false;
+          });
+          return filterByDistance(line, filtered, bufferM, 'osm');
+        }),
       );
     }
     if (wantGare) {

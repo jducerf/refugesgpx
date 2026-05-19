@@ -50,9 +50,11 @@ const VALUE_LABELS: Record<string, Record<string, string>> = {
     fountain: 'fontaine',
     water_point: "point d'eau",
     shower: 'douche',
-    toilets: 'toilettes',
+    toilets: 'toilettes publiques',
     shelter: 'abri',
     marketplace: 'marché',
+    pharmacy: 'pharmacie',
+    atm: 'distributeur de billets',
   },
   shop: {
     supermarket: 'supermarché',

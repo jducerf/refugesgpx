@@ -12,6 +12,19 @@ const TYPE_PREFIX: Record<string, string> = {
   osm_shop: '[Ravitaillement]',
   sncf_gare: '[Gare]',
   dt_lodging: '[Hébergement]',
+  osm_pharmacy: '[Pharmacie]',
+  osm_atm: '[Distributeur]',
+  osm_toilets: '[Toilettes]',
+};
+
+/** Libellé long FR par valeur OSM, pour la `<desc>` GPX (toutes les sources
+ * `osm` partagent la même branche dans le switch typeLabel ci-dessous). */
+const OSM_TYPE_LABEL: Record<string, string> = {
+  osm_water: 'eau OSM',
+  osm_shop: 'commerce OSM',
+  osm_pharmacy: 'pharmacie OSM',
+  osm_atm: 'distributeur OSM',
+  osm_toilets: 'toilettes OSM',
 };
 
 function xmlEscape(s: string): string {
@@ -60,9 +73,10 @@ export function buildEnrichedGpx(
       void getTypeMeta(typeValeur);
       const ele = alt !== undefined ? `<ele>${alt}</ele>` : '';
       const link = props.lien ? `<link href="${xmlEscape(props.lien)}"/>` : '';
+      const osmBase = OSM_TYPE_LABEL[typeValeur] ?? 'point OSM';
       const typeLabel =
         source === 'osm'
-          ? `eau OSM${props.osmSubtype ? ` (${props.osmSubtype})` : ''}`
+          ? `${osmBase}${props.osmSubtype ? ` (${props.osmSubtype})` : ''}`
           : source === 'c2c'
             ? 'bivouac (Camptocamp)'
             : source === 'sncf'

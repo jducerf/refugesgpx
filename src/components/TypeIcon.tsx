@@ -1,4 +1,4 @@
-import { Bed, BedDouble, Droplets, Home, Mountain, ShoppingBag, Tent, TrainFront, TriangleAlert, Waves, type LucideIcon } from 'lucide-react';
+import { Banknote, Bed, BedDouble, Cross, Droplets, Home, Mountain, ShoppingBag, Tent, Toilet, TrainFront, TriangleAlert, Waves, type LucideIcon } from 'lucide-react';
 import type { TypeMeta } from '@/lib/types';
 import { cn } from '@/lib/cn';
 
@@ -13,6 +13,9 @@ const MAP: Record<TypeMeta['iconKey'], LucideIcon> = {
   bag: ShoppingBag,
   train: TrainFront,
   bed_single: Bed,
+  cross: Cross,
+  banknote: Banknote,
+  toilet: Toilet,
 };
 
 interface TypeIconProps {

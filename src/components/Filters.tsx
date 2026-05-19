@@ -30,6 +30,9 @@ const SOURCE_LABEL: Record<TypeKey, string> = {
   osm_shop: 'Commerces',
   sncf_gare: 'Gares SNCF',
   dt_lodging: 'Hébergements payants',
+  osm_pharmacy: 'Pharmacies',
+  osm_atm: 'Distributeurs',
+  osm_toilets: 'Toilettes publiques',
 };
 
 const SOURCE_ORIGIN: Record<TypeKey, string> = {
@@ -43,6 +46,9 @@ const SOURCE_ORIGIN: Record<TypeKey, string> = {
   osm_shop: 'OSM',
   sncf_gare: 'SNCF',
   dt_lodging: 'DATAtourisme',
+  osm_pharmacy: 'OSM',
+  osm_atm: 'OSM',
+  osm_toilets: 'OSM',
 };
 
 function useIsTypeActive(typeKey: TypeKey): boolean {

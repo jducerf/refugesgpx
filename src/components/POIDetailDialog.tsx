@@ -591,14 +591,46 @@ function OSMDetailDialog({
 }) {
   const f = candidate.feature;
   const p = f.properties as Record<string, unknown>;
-  // Le typeKey distingue les sous-genres OSM (eau, commerce…) — il pilote le
-  // meta de marker, le libellé de fallback et l'avertissement terrain.
-  const typeKey = (p.type as { valeur?: string } | undefined)?.valeur === 'osm_shop'
-    ? 'osm_shop'
-    : 'osm_water';
+  // Le typeKey distingue les sous-genres OSM (eau, commerce, pharmacie…) ;
+  // il pilote le meta de marker, le libellé de fallback et l'avertissement
+  // terrain. On lit directement la valeur OSM portée par la feature, avec
+  // fallback `osm_water` pour conserver l'ancien comportement si un POI ne
+  // porte pas de type explicite (ne devrait pas arriver en pratique).
+  const rawValeur = (p.type as { valeur?: string } | undefined)?.valeur;
+  const KNOWN_OSM: ReadonlyArray<string> = [
+    'osm_water',
+    'osm_shop',
+    'osm_pharmacy',
+    'osm_atm',
+    'osm_toilets',
+  ];
+  const typeKey = (rawValeur && KNOWN_OSM.includes(rawValeur) ? rawValeur : 'osm_water') as
+    | 'osm_water'
+    | 'osm_shop'
+    | 'osm_pharmacy'
+    | 'osm_atm'
+    | 'osm_toilets';
   const isShop = typeKey === 'osm_shop';
-  const nomFallback = isShop ? 'Commerce (OSM)' : "Point d'eau (OSM)";
-  const nom = (p.nom as string) ?? nomFallback;
+  const NOM_FALLBACK: Record<typeof typeKey, string> = {
+    osm_water: "Point d'eau (OSM)",
+    osm_shop: 'Commerce (OSM)',
+    osm_pharmacy: 'Pharmacie (OSM)',
+    osm_atm: 'Distributeur (OSM)',
+    osm_toilets: 'Toilettes (OSM)',
+  };
+  const TERRAIN_WARNING: Record<typeof typeKey, string> = {
+    osm_water:
+      'la potabilité et le débit ne sont pas garantis. Les données OSM sont contribuées par la communauté.',
+    osm_shop:
+      'horaires et ouverture saisonnière variables, surtout en village de montagne. Données contribuées par la communauté OSM.',
+    osm_pharmacy:
+      "horaires et garde de nuit à vérifier ; en zone rurale, l'officine la plus proche peut être à plusieurs vallées. Données contribuées par la communauté OSM.",
+    osm_atm:
+      "fonctionnement et alimentation en billets non garantis hors saison. Prévoir un peu d'espèces avant de quitter une vallée. Données contribuées par la communauté OSM.",
+    osm_toilets:
+      "ouverture saisonnière fréquente, parfois fermées hors saison. Le tag `fee` indique si le passage est payant. Données contribuées par la communauté OSM.",
+  };
+  const nom = (p.nom as string) ?? NOM_FALLBACK[typeKey];
   const meta = getTypeMeta(typeKey);
   const alt = (p.coord as { alt?: number } | undefined)?.alt;
   const tags = (p.osmTags as Record<string, string> | undefined) ?? {};
@@ -616,6 +648,13 @@ function OSMDetailDialog({
     if (k === 'check_date' || k.startsWith('survey:')) return false;
     // Shops : on cache le tag structurant déjà rendu via le sous-titre.
     if (isShop && (k === 'shop' || k === 'amenity')) return false;
+    // Idem pour les autres amenities : le tag `amenity` est déjà rendu en
+    // sous-titre via osmSubtype.
+    if (
+      (typeKey === 'osm_pharmacy' || typeKey === 'osm_atm' || typeKey === 'osm_toilets') &&
+      k === 'amenity'
+    )
+      return false;
     return true;
   });
 
@@ -658,10 +697,7 @@ function OSMDetailDialog({
         )}
 
         <div className="rounded bg-amber-50 px-2 py-1.5 text-[11px] text-amber-800">
-          <b>À vérifier sur le terrain :</b>{' '}
-          {isShop
-            ? 'horaires et ouverture saisonnière variables, surtout en village de montagne. Données contribuées par la communauté OSM.'
-            : 'la potabilité et le débit ne sont pas garantis. Les données OSM sont contribuées par la communauté.'}
+          <b>À vérifier sur le terrain :</b> {TERRAIN_WARNING[typeKey]}
         </div>
 
         {link && (

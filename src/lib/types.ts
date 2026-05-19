@@ -75,7 +75,10 @@ export interface TypeMeta {
     | 'mountain'
     | 'bag'
     | 'train'
-    | 'bed_single';
+    | 'bed_single'
+    | 'cross'
+    | 'banknote'
+    | 'toilet';
   /** Path SVG (inner of <g>) pour marker de carte rasterizé */
   svgPath: string;
 }
@@ -104,6 +107,15 @@ const LUCIDE_PATHS: Record<TypeMeta['iconKey'], string> = {
   // Bed (Lucide) — hébergements Datatourisme (distinct du BedDouble gîte refuges.info)
   bed_single:
     '<path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/>',
+  // Cross (Lucide) — croix verte pharmacie OSM (amenity=pharmacy)
+  cross:
+    '<path d="M4 9a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h4a1 1 0 0 1 1 1v4a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-4a1 1 0 0 1 1-1h4a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2h-4a1 1 0 0 1-1-1V4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4a1 1 0 0 1-1 1z"/>',
+  // Banknote (Lucide) — distributeurs OSM (amenity=atm)
+  banknote:
+    '<rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/>',
+  // Toilet (Lucide) — toilettes publiques OSM (amenity=toilets)
+  toilet:
+    '<path d="M7 12h13a1 1 0 0 1 1 1 5 5 0 0 1-5 5h-.598a.5.5 0 0 0-.424.765l1.544 2.47a.5.5 0 0 1-.424.765H5.402a.5.5 0 0 1-.424-.765L7 18"/><path d="M8 18a5 5 0 0 1-5-5V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8"/>',
 };
 
 export const TYPE_LABELS = {
@@ -188,6 +200,30 @@ export const TYPE_LABELS = {
     iconKey: 'bed_single',
     svgPath: LUCIDE_PATHS.bed_single,
   },
+  osm_pharmacy: {
+    id: -6,
+    label: 'Pharmacies (OSM)',
+    valeurAPI: 'osm_pharmacy',
+    color: '#16A34A', // vert pharmacie iconique
+    iconKey: 'cross',
+    svgPath: LUCIDE_PATHS.cross,
+  },
+  osm_atm: {
+    id: -7,
+    label: 'Distributeurs (OSM)',
+    valeurAPI: 'osm_atm',
+    color: '#475569', // slate neutre service
+    iconKey: 'banknote',
+    svgPath: LUCIDE_PATHS.banknote,
+  },
+  osm_toilets: {
+    id: -8,
+    label: 'Toilettes (OSM)',
+    valeurAPI: 'osm_toilets',
+    color: '#A16207', // ambre brun, distinct des bleus eau et du jaune passage
+    iconKey: 'toilet',
+    svgPath: LUCIDE_PATHS.toilet,
+  },
 } as const satisfies Record<string, TypeMeta>;
 
 export type TypeKey = keyof typeof TYPE_LABELS;
@@ -210,6 +246,9 @@ export const ANNEX_TYPE_KEYS: TypeKey[] = [
   'osm_shop',
   'sncf_gare',
   'dt_lodging',
+  'osm_pharmacy',
+  'osm_atm',
+  'osm_toilets',
 ];
 
 const VALEUR_TO_META: Record<string, TypeMeta> = Object.fromEntries(
@@ -252,7 +291,7 @@ export interface CategoryMeta {
 export const CATEGORY_META: Record<Category, CategoryMeta> = {
   dormir: { label: 'Dormir', iconKey: 'home' },
   boire: { label: 'Boire', iconKey: 'droplet' },
-  ravito: { label: 'Ravito', iconKey: 'bag' },
+  ravito: { label: 'Service', iconKey: 'bag' },
   transport: { label: 'Transport', iconKey: 'train' },
   attention: { label: 'Attention', iconKey: 'alert' },
 };
@@ -270,7 +309,7 @@ export const CATEGORY_ORDER: Category[] = [
 export const CATEGORY_TO_TYPES: Record<Category, TypeKey[]> = {
   dormir: ['refuge', 'cabane', 'gite', 'c2c_bivouac', 'dt_lodging'],
   boire: ['pt_eau', 'osm_water'],
-  ravito: ['osm_shop'],
+  ravito: ['osm_shop', 'osm_pharmacy', 'osm_atm', 'osm_toilets'],
   transport: ['sncf_gare'],
   attention: ['pt_passage'],
 };
