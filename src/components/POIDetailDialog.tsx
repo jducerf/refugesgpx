@@ -75,6 +75,17 @@ export function POIDetailDialog() {
     );
   }
 
+  if (openCandidate?.source === 'pan') {
+    return (
+      <PANArretDetailDialog
+        candidate={openCandidate}
+        isSelected={selectedIds.has(openCandidate.id)}
+        onToggleSelect={() => toggleSelected(openCandidate.id)}
+        onClose={() => openDetail(null)}
+      />
+    );
+  }
+
   return (
     <RefugesDetailDialog
       openId={openId}
@@ -553,6 +564,99 @@ function DatatourismeDetailDialog({
             Site officiel <ExternalLink className="h-3 w-3" />
           </a>
         )}
+
+        <div className="flex justify-end pt-2">
+          <Button
+            variant={isSelected ? 'subtle' : 'primary'}
+            onClick={() => {
+              onToggleSelect();
+              onClose();
+            }}
+          >
+            {isSelected ? (
+              <>
+                <Check className="h-4 w-4" /> Retirer de l'export
+              </>
+            ) : (
+              <>
+                <Plus className="h-4 w-4" /> Ajouter à l'export
+              </>
+            )}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ─── Dialog Arrêts PAN (transport.data.gouv.fr, lecture statique) ──────
+
+function PANArretDetailDialog({
+  candidate,
+  isSelected,
+  onToggleSelect,
+  onClose,
+}: {
+  candidate: PoiCandidate;
+  isSelected: boolean;
+  onToggleSelect: () => void;
+  onClose: () => void;
+}) {
+  const f = candidate.feature;
+  const p = f.properties as Record<string, unknown>;
+  const nom = (p.nom as string) ?? 'Arrêt';
+  const meta = getTypeMeta('pan_arret');
+  const agencies = (p.panAgencies as string[] | undefined) ?? [];
+  const lt = (p.panLocationType as number | undefined) ?? 0;
+  const ltLabel = lt === 1 ? 'Pôle / gare routière' : 'Arrêt';
+  // L'explorateur PAN (/explore/gtfs-stops) n'accepte pas de paramètre de
+  // recherche → pas de deep-link possible vers un arrêt précis. On envoie
+  // donc l'utilisateur sur une recherche Google ciblée "nom + réseau +
+  // horaires", qui retombe dans 90% des cas sur le site officiel du réseau
+  // opérateur, là où il trouvera les vrais horaires GTFS.
+  const searchQuery = [nom, agencies[0], 'horaires'].filter(Boolean).join(' ');
+  const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`;
+
+  return (
+    <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent>
+        <DialogTitle className="flex items-center gap-2.5 pr-8">
+          {meta && <TypeIcon meta={meta} size={18} marker />}
+          <span>{decodeHtmlEntities(nom)}</span>
+          <span className="rounded-sm bg-orange-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-orange-800">
+            PAN
+          </span>
+        </DialogTitle>
+        <div className="text-sm text-slate-500">{ltLabel}</div>
+
+        {agencies.length > 0 && (
+          <div className="text-sm">
+            <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Réseau{agencies.length > 1 ? 'x' : ''}
+            </div>
+            <ul className="list-disc space-y-0.5 pl-5 text-slate-700">
+              {agencies.map((a) => (
+                <li key={a}>{a}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        <div className="rounded bg-amber-50 px-2 py-1.5 text-[11px] text-amber-800">
+          <b>À vérifier :</b> horaires, fréquence et exploitation saisonnière
+          auprès du réseau opérateur. Les arrêts publiés sur le Point d'Accès
+          National ne sont pas dédoublonnés en amont — un même arrêt physique
+          peut apparaître plusieurs fois.
+        </div>
+
+        <a
+          href={searchUrl}
+          target="_blank"
+          rel="noopener"
+          className="inline-flex items-center gap-1 text-sm text-blue-700 hover:underline"
+        >
+          Chercher les horaires sur le web <ExternalLink className="h-3 w-3" />
+        </a>
 
         <div className="flex justify-end pt-2">
           <Button

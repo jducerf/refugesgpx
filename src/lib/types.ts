@@ -30,7 +30,7 @@ export type PoiFeature = Feature<Point, PoiProperties>;
 export type TraceLineFeature = Feature<LineString>;
 export type BufferPolygonFeature = Feature<Polygon>;
 
-export type PoiSource = 'refuges' | 'osm' | 'c2c' | 'sncf' | 'datatourisme';
+export type PoiSource = 'refuges' | 'osm' | 'c2c' | 'sncf' | 'datatourisme' | 'pan';
 
 export interface PoiCandidate {
   feature: PoiFeature;
@@ -78,7 +78,8 @@ export interface TypeMeta {
     | 'bed_single'
     | 'cross'
     | 'banknote'
-    | 'toilet';
+    | 'toilet'
+    | 'bus';
   /** Path SVG (inner of <g>) pour marker de carte rasterizé */
   svgPath: string;
 }
@@ -116,6 +117,9 @@ const LUCIDE_PATHS: Record<TypeMeta['iconKey'], string> = {
   // Toilet (Lucide) — toilettes publiques OSM (amenity=toilets)
   toilet:
     '<path d="M7 12h13a1 1 0 0 1 1 1 5 5 0 0 1-5 5h-.598a.5.5 0 0 0-.424.765l1.544 2.47a.5.5 0 0 1-.424.765H5.402a.5.5 0 0 1-.424-.765L7 18"/><path d="M8 18a5 5 0 0 1-5-5V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8"/>',
+  // Bus (Lucide) — arrêts de transport en commun (PAN transport.data.gouv.fr)
+  bus:
+    '<path d="M8 6v6"/><path d="M15 6v6"/><path d="M2 12h19.6"/><path d="M18 18h3s.5-1.7.8-2.8c.1-.4.2-.8.2-1.2 0-.4-.1-.8-.2-1.2l-1.4-5C20.1 6.8 19.1 6 18 6H4a2 2 0 0 0-2 2v10h3"/><circle cx="7" cy="18" r="2"/><path d="M9 18h5"/><circle cx="16" cy="18" r="2"/>',
 };
 
 export const TYPE_LABELS = {
@@ -224,6 +228,14 @@ export const TYPE_LABELS = {
     iconKey: 'toilet',
     svgPath: LUCIDE_PATHS.toilet,
   },
+  pan_arret: {
+    id: -9,
+    label: 'Arrêts bus / cars',
+    valeurAPI: 'pan_arret',
+    color: '#EA580C', // orange-600, signalétique transport en commun
+    iconKey: 'bus',
+    svgPath: LUCIDE_PATHS.bus,
+  },
 } as const satisfies Record<string, TypeMeta>;
 
 export type TypeKey = keyof typeof TYPE_LABELS;
@@ -249,6 +261,7 @@ export const ANNEX_TYPE_KEYS: TypeKey[] = [
   'osm_pharmacy',
   'osm_atm',
   'osm_toilets',
+  'pan_arret',
 ];
 
 const VALEUR_TO_META: Record<string, TypeMeta> = Object.fromEntries(
@@ -310,7 +323,7 @@ export const CATEGORY_TO_TYPES: Record<Category, TypeKey[]> = {
   dormir: ['refuge', 'cabane', 'gite', 'c2c_bivouac', 'dt_lodging'],
   boire: ['pt_eau', 'osm_water'],
   ravito: ['osm_shop', 'osm_pharmacy', 'osm_atm', 'osm_toilets'],
-  transport: ['sncf_gare'],
+  transport: ['sncf_gare', 'pan_arret'],
   attention: ['pt_passage'],
 };
 

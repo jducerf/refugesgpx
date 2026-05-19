@@ -15,6 +15,7 @@ const TYPE_PREFIX: Record<string, string> = {
   osm_pharmacy: '[Pharmacie]',
   osm_atm: '[Distributeur]',
   osm_toilets: '[Toilettes]',
+  pan_arret: '[Arrêt]',
 };
 
 /** Libellé long FR par valeur OSM, pour la `<desc>` GPX (toutes les sources
@@ -83,7 +84,9 @@ export function buildEnrichedGpx(
               ? 'gare SNCF'
               : source === 'datatourisme'
                 ? `hébergement (DATAtourisme)`
-                : typeValeur;
+                : source === 'pan'
+                  ? `arrêt bus/cars (PAN)`
+                  : typeValeur;
       const desc = `${typeLabel}${
         alt !== undefined ? ' · ' + alt + ' m' : ''
       } · ${Math.round(distM)} m du tracé`;
@@ -105,6 +108,8 @@ export function buildEnrichedGpx(
   if (usedSources.has('sncf')) labels.push('SNCF — Gares de voyageurs (LOV2)');
   if (usedSources.has('datatourisme'))
     labels.push('DATAtourisme / ADN Tourisme (Licence Ouverte)');
+  if (usedSources.has('pan'))
+    labels.push('transport.data.gouv.fr — Arrêts de transport (LOV2)');
   const sourcesLabel = labels.length > 0 ? labels.join(' + ') : 'refuges.info (CC BY-SA 2.0)';
   return `<?xml version="1.0" encoding="UTF-8"?>
 <gpx version="1.1" creator="refugesgpx" xmlns="http://www.topografix.com/GPX/1/1">

@@ -33,6 +33,7 @@ const SOURCE_LABEL: Record<TypeKey, string> = {
   osm_pharmacy: 'Pharmacies',
   osm_atm: 'Distributeurs',
   osm_toilets: 'Toilettes publiques',
+  pan_arret: 'Arrêts bus / cars',
 };
 
 const SOURCE_ORIGIN: Record<TypeKey, string> = {
@@ -49,6 +50,7 @@ const SOURCE_ORIGIN: Record<TypeKey, string> = {
   osm_pharmacy: 'OSM',
   osm_atm: 'OSM',
   osm_toilets: 'OSM',
+  pan_arret: 'transport.data.gouv.fr',
 };
 
 function useIsTypeActive(typeKey: TypeKey): boolean {
@@ -165,6 +167,15 @@ function SourcesInfo() {
               className="underline hover:text-[var(--color-accent)]"
             >
               DATAtourisme
+            </a>{' '}
+            ·{' '}
+            <a
+              href="https://transport.data.gouv.fr"
+              target="_blank"
+              rel="noopener"
+              className="underline hover:text-[var(--color-accent)]"
+            >
+              transport.data.gouv.fr
             </a>
           </p>
           <p className="mt-1.5 text-[10px] italic leading-snug text-slate-500">

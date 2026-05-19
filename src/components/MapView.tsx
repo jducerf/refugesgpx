@@ -15,6 +15,7 @@ import { fetchWaterPointsOSM, fetchShopsOSM, fetchAmenitiesOSM } from '@/lib/ove
 import { fetchBivouacsC2C } from '@/lib/camptocamp-api';
 import { fetchGaresSNCF } from '@/lib/transports-api';
 import { fetchDatatourismeLodging } from '@/lib/datatourisme-api';
+import { fetchArretsPAN } from '@/lib/arrets-pan-api';
 import { BUFFER_STEPS, DT_GROUPS, TYPE_LABELS, type TypeKey } from '@/lib/types';
 import type { PoiCandidate } from '@/lib/types';
 import { loadAllMarkerImages } from '@/lib/markers';
@@ -359,6 +360,7 @@ export function MapView() {
     const wantShop = enabledAnnexTypes.has('osm_shop' as TypeKey);
     const wantGare = enabledAnnexTypes.has('sncf_gare' as TypeKey);
     const wantLodging = enabledAnnexTypes.has('dt_lodging' as TypeKey);
+    const wantArret = enabledAnnexTypes.has('pan_arret' as TypeKey);
     const wantPharmacy = enabledAnnexTypes.has('osm_pharmacy' as TypeKey);
     const wantAtm = enabledAnnexTypes.has('osm_atm' as TypeKey);
     const wantToilets = enabledAnnexTypes.has('osm_toilets' as TypeKey);
@@ -405,18 +407,27 @@ export function MapView() {
         }),
       );
     }
-    if (wantGare) {
-      // Buffer plus généreux pour les gares : un randonneur cherche surtout
-      // un point d'accès au début et à la fin du tracé, parfois à plusieurs
-      // kilomètres. Plancher à 3 km pour rester utile même avec un buffer
-      // d'analyse principal très resserré (100-500 m).
+    if (wantGare || wantArret) {
+      // Buffer plus généreux pour les sources transport : un randonneur cherche
+      // surtout un point d'accès au début et à la fin du tracé, parfois à
+      // plusieurs kilomètres. Plancher à 3 km pour rester utile même avec un
+      // buffer d'analyse principal très resserré (100-500 m).
       const transportBufferM = Math.max(bufferM, 3000);
       const transportBbox = expandBboxMeters(traceBbox(trace), transportBufferM);
-      tasks.push(
-        fetchGaresSNCF(transportBbox, ctrl.signal).then((pois) =>
-          filterByDistance(line, pois, transportBufferM, 'sncf'),
-        ),
-      );
+      if (wantGare) {
+        tasks.push(
+          fetchGaresSNCF(transportBbox, ctrl.signal).then((pois) =>
+            filterByDistance(line, pois, transportBufferM, 'sncf'),
+          ),
+        );
+      }
+      if (wantArret) {
+        tasks.push(
+          fetchArretsPAN(transportBbox, ctrl.signal).then((pois) =>
+            filterByDistance(line, pois, transportBufferM, 'pan'),
+          ),
+        );
+      }
     }
     if (wantLodging) {
       // Buffer standard du slider — l'idée est de pouvoir trouver un hébergement
