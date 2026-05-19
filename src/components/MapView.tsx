@@ -459,12 +459,28 @@ export function MapView() {
     const apply = () => {
       const src = map.getSource('pois') as maplibregl.GeoJSONSource | undefined;
       if (!src) return;
-      const all = [...candidates, ...annexCandidates];
+      // Filtre local par ID de type (au lieu du libellé string) : c'est
+      // immune aux subtilités d'encodage Unicode (NFC vs NFD), aux espaces
+      // insécables et aux variations de casse qui peuvent arriver dans les
+      // réponses API. Chaque TypeMeta porte un id numérique stable.
+      const enabledIds = new Set<number>();
+      for (const k of enabledTypes) enabledIds.add(TYPE_LABELS[k].id);
+      for (const k of enabledAnnexTypes) enabledIds.add(TYPE_LABELS[k].id);
+      const all = [...candidates, ...annexCandidates].filter(({ feature: f }) => {
+        const tid = f.properties.type?.id;
+        return typeof tid === 'number' && enabledIds.has(tid);
+      });
       const feats = all.map(({ feature: f, distM, id }) => {
         const typeValeur = f.properties.type?.valeur;
         const iconImage = typeValeur ? `poi-${typeValeur}` : 'poi-default';
+        // Force l'id GeoJSON top-level (et pas seulement dans properties).
+        // MapLibre fait du diffing sur ce champ pour identifier les features
+        // qui doivent disparaître entre deux setData ; quand il est manquant,
+        // les markers anciens peuvent persister à l'écran de façon erratique.
+        // refuges.info ne le renseigne pas toujours, donc on s'en charge ici.
         return {
           ...f,
+          id,
           properties: {
             ...f.properties,
             id,
@@ -475,10 +491,30 @@ export function MapView() {
         };
       });
       src.setData({ type: 'FeatureCollection', features: feats });
+      // Force un repaint immédiat. setData met à jour la source mais MapLibre
+      // peut différer le rendu jusqu'au prochain événement utilisateur (zoom,
+      // pan, click). On évite ainsi le décalage d'une frame entre la donnée
+      // et l'affichage qui rendait l'app "inversée" au toggle d'un filtre.
+      map.triggerRepaint();
     };
-    if (map.isStyleLoaded()) apply();
-    else map.once('load', apply);
-  }, [candidates, annexCandidates, selectedIds, markersReady]);
+    // On appelle apply() systématiquement sans gating sur `isStyleLoaded()`.
+    // `setData()` fonctionne quel que soit l'état du style — MapLibre re-tile
+    // automatiquement. L'ancien fallback `map.once('load', apply)` était un
+    // piège : `'load'` ne fire qu'une seule fois au tout début et jamais
+    // après, donc si le style était transitoirement "non chargé" (au milieu
+    // d'un rebuild de tuiles déclenché par un précédent setData), l'update
+    // était silencieusement perdu. Bug visible quand un toggle de filtre se
+    // chaînait à un fetch très rapide (cache IndexedDB) : le 2e setData avec
+    // la nouvelle donnée tombait dans la fenêtre où `isStyleLoaded()===false`.
+    apply();
+  }, [
+    candidates,
+    annexCandidates,
+    selectedIds,
+    markersReady,
+    enabledTypes,
+    enabledAnnexTypes,
+  ]);
 
   return (
     <div className="absolute inset-0 h-full w-full">
