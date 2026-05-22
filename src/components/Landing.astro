@@ -36,8 +36,8 @@
           Déposez votre GPX. L'app repère ce qui compte le long du tracé —
           <strong>où dormir</strong>, <strong>où boire</strong>,
           <strong>où ravitailler</strong>, <strong>comment arriver et repartir</strong>,
-          <strong>où faire attention</strong>. Vous repartez avec un GPX enrichi et un topo
-          PDF, prêts pour le bivouac.
+          <strong>où faire attention</strong>, <strong>quel temps prévoir</strong>. Vous
+          repartez avec un GPX enrichi et un topo PDF, prêts pour le bivouac.
         </p>
 
         <div class="rise rise-4 mt-9 flex flex-wrap items-center justify-center gap-5">
@@ -221,6 +221,10 @@
           <div class="font-display text-xl font-semibold text-[var(--color-ink)]">Attention</div>
           <p class="mt-1 text-[var(--color-ink-soft)]">Pas d'escalade, vires, traversées exposées — repérés en amont pour préparer le matériel et le timing.</p>
         </li>
+        <li class="border-l-2 pl-5" style="border-color: #0EA5E9">
+          <div class="font-display text-xl font-semibold text-[var(--color-ink)]">Anticiper la météo</div>
+          <p class="mt-1 text-[var(--color-ink-soft)]">Vigilance officielle Météo-France (J et J+1) sur les départements traversés, puis prévisions à 7 jours, détail horaire, indice UV, isotherme 0°C et rafales — au départ, à l'arrivée et sur chaque refuge sélectionné.</p>
+        </li>
       </ul>
     </div>
   </section>
@@ -365,6 +369,34 @@
                     <a href="https://transport.data.gouv.fr/datasets/arrets-de-transport-en-france" target="_blank" rel="noopener" class="underline decoration-[var(--color-accent)] underline-offset-2 hover:text-[var(--color-accent)]">Point d'Accès National</a>
                     (agrégat des GTFS publics), pour préparer l'accès au sentier quand le train s'arrête trop loin.
                     <br /><span class="text-sm text-[var(--color-ink-mute)]">Licence Ouverte v2 / Etalab</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- ANTICIPER -->
+            <div>
+              <p class="font-display text-sm font-semibold uppercase tracking-wider" style="color: #0EA5E9">Anticiper</p>
+              <div class="mt-3 grid gap-8 md:grid-cols-2">
+                <div>
+                  <div class="font-display text-xl font-semibold text-[var(--color-ink)]">Météo-France — Vigilance officielle</div>
+                  <p class="mt-2 text-[var(--color-ink-soft)]">
+                    Niveau de vigilance (vert / jaune / orange / rouge) par phénomène et par
+                    département, pour aujourd'hui et demain, via l'API
+                    <a href="https://portail-api.meteofrance.fr" target="_blank" rel="noopener" class="underline decoration-[var(--color-accent)] underline-offset-2 hover:text-[var(--color-accent)]">Portail Météo-France</a> —
+                    les alertes utilisées par les services publics, projetées sur les départements
+                    traversés par votre trace.
+                    <br /><span class="text-sm text-[var(--color-ink-mute)]">Licence Ouverte v2 / Etalab</span>
+                  </p>
+                </div>
+                <div>
+                  <div class="font-display text-xl font-semibold text-[var(--color-ink)]">Open-Meteo — prévisions 7 jours</div>
+                  <p class="mt-2 text-[var(--color-ink-soft)]">
+                    Modèles AROME, ICON-EU et GFS agrégés par
+                    <a href="https://open-meteo.com" target="_blank" rel="noopener" class="underline decoration-[var(--color-accent)] underline-offset-2 hover:text-[var(--color-accent)]">Open-Meteo</a> :
+                    prévisions journalières à 7 jours, détail horaire du jour, indice UV, isotherme
+                    0°C, rafales — au départ, à l'arrivée et sur chaque refuge coché.
+                    <br /><span class="text-sm text-[var(--color-ink-mute)]">CC BY 4.0 · grille ~1-2 km en France</span>
                   </p>
                 </div>
               </div>
