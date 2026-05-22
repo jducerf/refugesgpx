@@ -1,6 +1,6 @@
 # 🥾 Refuges.GPX
 
-> Web-app qui prend un GPX existant, affiche tous les refuges, cabanes, gîtes et points d'eau de [refuges.info](https://www.refuges.info) à proximité du tracé, et exporte un **GPX enrichi** + un **topo PDF** imprimable.
+> Web-app qui prend un GPX existant, affiche tout ce qui compte autour du tracé — refuges, cabanes, gîtes, points d'eau, bivouacs, ravitaillement, transports, vigilance météo — et exporte un **GPX enrichi** + un **topo PDF** imprimable.
 
 🚀 **En ligne** : **[refuges.yoandev.co](https://refuges.yoandev.co)**
 
@@ -21,12 +21,19 @@ Cette app **complète** ces outils : tu traces ton parcours là où tu as l'habi
 
 - 📂 Import GPX (drag-and-drop ou fichier)
 - 📏 Distance paramétrable autour du tracé (100 m à 5 km)
-- 🏷️ Filtres par type : refuges, cabanes, gîtes, points d'eau, passages délicats
-- 🗺️ Carte interactive (OpenStreetMap) avec POIs identifiés par emoji
+- 🧭 Filtres organisés en **5 besoins** : Dormir, Boire, Service, Transport, Attention — déployables source par source
+- 🏷️ Sources couvertes :
+  - **refuges.info** : refuges gardés, cabanes non gardées, gîtes d'étape, points d'eau, passages délicats
+  - **Camptocamp** : bivouacs
+  - **OpenStreetMap** (Overpass) : sources / eau, ravitaillement, pharmacies, distributeurs, toilettes publiques
+  - **DATAtourisme** : hébergements (refuges privés, gîtes, B&B, auberges, campings, hôtels…)
+  - **SNCF** + **transport.data.gouv.fr (PAN)** : gares et arrêts bus / cars
+- 🗺️ Carte interactive (OpenStreetMap) avec POIs identifiés par icônes typées
 - 📋 Liste latérale triée par distance au tracé
-- 📖 Fiche détaillée par POI : équipements, accès, **5 derniers commentaires + photos**
+- 📖 Fiche détaillée par POI : équipements, accès, **5 derniers commentaires + photos** (refuges.info)
+- ⛅ Panel **Météo** : prévisions Open-Meteo (départ / milieu / arrivée) + niveau de **Vigilance Météo-France** des départements traversés
 - ✅ Sélection multiple
-- 📥 **Export GPX enrichi** : tracé original intact + waypoints sélectionnés
+- 📥 **Export GPX enrichi** : tracé original intact + waypoints sélectionnés, avec `<copyright>` listant uniquement les sources réellement utilisées
 - 🖨️ **Export topo PDF imprimable** : carte miniature + détails + commentaires (utilisable offline sur téléphone)
 
 ## Stack
@@ -41,7 +48,7 @@ Cette app **complète** ces outils : tu traces ton parcours là où tu as l'habi
 - [Zustand 5](https://zustand-demo.pmnd.rs) — state management
 - [Radix UI](https://www.radix-ui.com) — primitives accessibles
 
-**Quasi-aucun backend.** Tout tourne dans le navigateur, les requêtes vont directement aux APIs publiques. Seule exception : une mini Netlify Function (`netlify/functions/vigilance.ts`) qui relaie l'API Vigilance Météo-France — l'endpoint officiel exige une clé d'application qu'on ne peut pas exposer dans un bundle client (voir [Configuration Météo-France](#configuration-météo-france-optionnel)).
+**Quasi-aucun backend.** Tout tourne dans le navigateur, les requêtes vont directement aux APIs publiques (refuges.info, Overpass / OSM, Camptocamp, DATAtourisme, SNCF, transport.data.gouv.fr, Open-Meteo). Seule exception : une mini Netlify Function (`netlify/functions/vigilance.ts`) qui relaie l'API Vigilance Météo-France — l'endpoint officiel exige une clé d'application qu'on ne peut pas exposer dans un bundle client (voir [Configuration Météo-France](#configuration-météo-france-optionnel)).
 
 ## Développement
 
@@ -74,7 +81,10 @@ L'app étant un site statique, elle peut tout aussi bien être servie via Cloudf
 
 ## Configuration Météo-France (optionnel)
 
-La section « Météo » du panel utilise l'**API Vigilance** officielle de Météo-France pour afficher le niveau de vigilance des départements traversés par la trace. Sans clé, la section reste invisible — le reste de l'app fonctionne normalement.
+La section « Météo » se compose de deux blocs :
+
+- **Prévisions Open-Meteo** (départ / milieu / arrivée du tracé) — gratuit, sans clé, actif d'office.
+- **Vigilance Météo-France** des départements traversés — nécessite une clé d'application. Sans clé, ce bloc reste invisible ; les prévisions Open-Meteo continuent de s'afficher et le reste de l'app fonctionne normalement.
 
 Pour l'activer :
 
@@ -87,7 +97,22 @@ Pour l'activer :
 
 La fonction proxy (`netlify/functions/vigilance.ts`) met le résultat en cache 30 min côté mémoire + 30 min côté CDN Netlify : un site très fréquenté n'appellera Météo-France que ~50 fois par jour, largement dans le free tier des Netlify Functions (125 k invocations / mois).
 
-En local (`npm run dev`), la fonction n'est pas servie par Astro — utiliser `netlify dev` pour tester de bout en bout.
+### Tester la Vigilance en local
+
+`npm run dev` lance Astro seul — les Netlify Functions ne sont **pas** servies, donc le bloc Vigilance reste invisible. Pour le tester de bout en bout :
+
+1. Installer la CLI Netlify : `npm i -g netlify-cli` (ou `npx netlify-cli`).
+2. Créer un fichier `.env` à la racine du projet (déjà ignoré par git) :
+
+   ```bash
+   METEO_FRANCE_API_KEY=ta_cle_dapplication_meteo_france
+   ```
+
+3. Lancer `netlify dev` à la place de `npm run dev`. La CLI démarre Astro **et** les fonctions, charge automatiquement le `.env`, et expose le proxy sur `/.netlify/functions/vigilance`.
+
+Alternative sans `.env` : `METEO_FRANCE_API_KEY=… netlify dev` (variable inline).
+
+Si la variable est absente ou invalide, la fonction renvoie 503 et le composant Météo masque silencieusement le bloc Vigilance — pratique pour vérifier le fallback.
 
 ## Fond de carte — stratégie pérennité
 
@@ -107,15 +132,24 @@ Chacun fonctionne avec MapLibre via un simple changement d'URL de tuiles + ajout
 ## Données & licences
 
 - **Code** : [MIT](./LICENSE)
-- **Données** : © [refuges.info](https://www.refuges.info) contributors — [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0/)
+- **Sources de données** :
+  - [refuges.info](https://www.refuges.info) — [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0/)
+  - [OpenStreetMap](https://www.openstreetmap.org/copyright) (Overpass) — [ODbL](https://opendatacommons.org/licenses/odbl/)
+  - [Camptocamp](https://www.camptocamp.org) — [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
+  - [DATAtourisme](https://www.datatourisme.fr) — [Licence Ouverte 2.0](https://www.etalab.gouv.fr/licence-ouverte-open-licence)
+  - [SNCF Open Data](https://ressources.data.sncf.com) — [Licence Ouverte 2.0](https://www.etalab.gouv.fr/licence-ouverte-open-licence)
+  - [transport.data.gouv.fr (PAN)](https://transport.data.gouv.fr) — [Licence Ouverte 2.0](https://www.etalab.gouv.fr/licence-ouverte-open-licence)
+  - [Open-Meteo](https://open-meteo.com) — [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
+  - [Vigilance Météo-France](https://portail-api.meteofrance.fr) — Licence Ouverte 2.0
 - **Fond de carte** : tuiles [OpenStreetMap](https://www.openstreetmap.org/copyright) (ODbL)
 
-Toute donnée affichée ou exportée par cette application reste sous **CC BY-SA 2.0**. L'attribution est visible sur la carte, dans le GPX (`<copyright>`) et dans le topo PDF généré.
+Le GPX exporté liste dans `<copyright>` uniquement les sources réellement consultées, et chaque waypoint référence l'origine de la donnée. Le topo PDF reproduit la même attribution.
 
 ## Crédits
 
 - L'équipe et la communauté de [refuges.info](https://www.refuges.info) pour leur travail extraordinaire d'inventaire collaboratif des refuges et cabanes des massifs français et européens.
-- OpenStreetMap pour le fond de carte libre.
+- Les contributeurs et contributrices d'[OpenStreetMap](https://www.openstreetmap.org) et de [Camptocamp](https://www.camptocamp.org).
+- [DATAtourisme](https://www.datatourisme.fr), la [SNCF](https://ressources.data.sncf.com), [transport.data.gouv.fr](https://transport.data.gouv.fr), [Open-Meteo](https://open-meteo.com) et [Météo-France](https://meteofrance.com) pour l'ouverture de leurs données.
 
 ## Contribuer
 
