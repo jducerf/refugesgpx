@@ -2,6 +2,7 @@ import { Home } from 'lucide-react';
 import { FileDrop } from './FileDrop';
 import { TraceInfo } from './TraceInfo';
 import { Filters } from './Filters';
+import { MeteoSection } from './MeteoSection';
 import { POIList } from './POIList';
 import { ExportButtons } from './ExportButtons';
 import { useAppStore } from '@/store/useAppStore';
@@ -104,10 +105,11 @@ function EmptyState() {
 function FilledState() {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      {/* Bloc fixe en haut : trace + filtres */}
+      {/* Bloc fixe en haut : trace + filtres + météo */}
       <div className="space-y-2.5 px-4 py-2.5">
         <TraceInfo />
         <Filters />
+        <MeteoSection />
       </div>
       {/* Liste POI : remplit toute la hauteur disponible et scrolle */}
       <div className="flex min-h-0 flex-1 flex-col px-4">

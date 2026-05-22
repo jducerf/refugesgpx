@@ -41,7 +41,7 @@ Cette app **complète** ces outils : tu traces ton parcours là où tu as l'habi
 - [Zustand 5](https://zustand-demo.pmnd.rs) — state management
 - [Radix UI](https://www.radix-ui.com) — primitives accessibles
 
-**Aucun backend.** Tout tourne dans le navigateur, les requêtes vont directement à l'API publique refuges.info.
+**Quasi-aucun backend.** Tout tourne dans le navigateur, les requêtes vont directement aux APIs publiques. Seule exception : une mini Netlify Function (`netlify/functions/vigilance.ts`) qui relaie l'API Vigilance Météo-France — l'endpoint officiel exige une clé d'application qu'on ne peut pas exposer dans un bundle client (voir [Configuration Météo-France](#configuration-météo-france-optionnel)).
 
 ## Développement
 
@@ -70,7 +70,24 @@ Puis ouvre [http://localhost:4321](http://localhost:4321).
 L'app est conçue pour [Netlify](https://www.netlify.com) (free tier suffit).
 Le fichier [`netlify.toml`](./netlify.toml) configure tout ; un `git push` sur `main` suffit pour déployer.
 
-L'app étant un site statique, elle peut tout aussi bien être servie via Cloudflare Pages, GitHub Pages, Vercel ou n'importe quel hébergeur de fichiers statiques.
+L'app étant un site statique, elle peut tout aussi bien être servie via Cloudflare Pages, GitHub Pages, Vercel ou n'importe quel hébergeur de fichiers statiques. La section **Météo / Vigilance** nécessite en revanche une plateforme qui exécute les Netlify Functions (ou un équivalent serverless si tu portes le proxy).
+
+## Configuration Météo-France (optionnel)
+
+La section « Météo » du panel utilise l'**API Vigilance** officielle de Météo-France pour afficher le niveau de vigilance des départements traversés par la trace. Sans clé, la section reste invisible — le reste de l'app fonctionne normalement.
+
+Pour l'activer :
+
+1. Créer un compte sur [portail-api.meteofrance.fr](https://portail-api.meteofrance.fr).
+2. S'abonner à l'API **« Données Publiques Vigilance »** (gratuit).
+3. Générer une **clé d'application** (« application token »).
+4. La déclarer dans les variables d'environnement Netlify sous le nom `METEO_FRANCE_API_KEY` :
+   - Site settings → Build & deploy → Environment → Environment variables.
+5. Redéployer.
+
+La fonction proxy (`netlify/functions/vigilance.ts`) met le résultat en cache 30 min côté mémoire + 30 min côté CDN Netlify : un site très fréquenté n'appellera Météo-France que ~50 fois par jour, largement dans le free tier des Netlify Functions (125 k invocations / mois).
+
+En local (`npm run dev`), la fonction n'est pas servie par Astro — utiliser `netlify dev` pour tester de bout en bout.
 
 ## Fond de carte — stratégie pérennité
 

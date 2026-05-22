@@ -22,6 +22,8 @@ Node 22 (see `netlify.toml`). Path alias: `@/*` → `src/*`.
 
 **Stack**: Astro 6 SSG + React 19 islands + Tailwind 4 + TypeScript 6. **No backend** — everything runs in the browser; all data comes from public APIs (refuges.info, Overpass/OSM, Camptocamp). Deployed as a static site on Netlify.
 
+**Exception**: a single Netlify Function (`netlify/functions/vigilance.ts`) proxies the Météo-France Vigilance API because that endpoint requires an application key (`METEO_FRANCE_API_KEY`) we can't expose in the bundle. The function caches in module scope + sets a `s-maxage=1800` so the upstream is barely touched. If the env var is missing, the function returns 503 and the UI section hides itself silently.
+
 ### Page model
 
 Only two pages:
