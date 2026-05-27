@@ -28,6 +28,7 @@ Cette app **complète** ces outils : tu traces ton parcours là où tu as l'habi
   - **OpenStreetMap** (Overpass) : sources / eau, ravitaillement, pharmacies, distributeurs, toilettes publiques
   - **DATAtourisme** : hébergements (refuges privés, gîtes, B&B, auberges, campings, hôtels…)
   - **SNCF** + **transport.data.gouv.fr (PAN)** : gares et arrêts bus / cars
+  - **MapPatou** (Pasto-Kezako / LESSEM – INRAE) : zones pastorales et présence de **chiens de protection** (patous) — *expérimental, masqué en production (voir [Zones pastorales](#zones-pastorales-chiens-de-protection))*
 - 🗺️ Carte interactive (OpenStreetMap) avec POIs identifiés par icônes typées
 - 📋 Liste latérale triée par distance au tracé
 - 📖 Fiche détaillée par POI : équipements, accès, **5 derniers commentaires + photos** (refuges.info)
@@ -114,6 +115,16 @@ Alternative sans `.env` : `METEO_FRANCE_API_KEY=… netlify dev` (variable inlin
 
 Si la variable est absente ou invalide, la fonction renvoie 503 et le composant Météo masque silencieusement le bloc Vigilance — pratique pour vérifier le fallback.
 
+## Zones pastorales (chiens de protection)
+
+Une couche optionnelle affiche le long du tracé les **Unités Pastorales** et la **présence de chiens de protection** (patous), à partir des données **MapPatou** éditées par [Pasto-Kezako](https://www.pasto-kezako.fr/mappatou-carte/) (données LESSEM – INRAE). Objectif : prévenir le randonneur qu'un patou peut se trouver sur son chemin et l'inviter au bon comportement.
+
+L'API renvoie l'état pastoral **à une date donnée** : l'app interroge la date de rando choisie dans l'UI, met le résultat en cache par date, puis filtre les zones autour du tracé. Polygones violets = chiens présents, ambre = sans chien ; un clic ouvre le détail (espèce, période d'estive, jours de présence).
+
+⚠️ **Désactivée en production** tant que la **licence d'utilisation des données MapPatou n'est pas confirmée** auprès de Pasto-Kezako. Le drapeau `PASTORAL_FEATURE_ENABLED` (`src/lib/mappatou-api.ts`) la laisse **active en dev** (`npm run dev`) mais **inerte dans le build de prod** : aucune section dans l'UI, aucun appel à l'API, aucune attribution sur la carte.
+
+Pour l'activer en production une fois l'accord obtenu — **sans changement de code** — déclarer la variable d'environnement Netlify `PUBLIC_PASTORAL_LAYER=true` (Site settings → Environment variables) puis redéployer. En local, `npm run preview` (qui sert le build de prod) permet de vérifier qu'elle est bien masquée.
+
 ## Fond de carte — stratégie pérennité
 
 Par défaut, l'app utilise les **tuiles standard d'OpenStreetMap** (`tile.openstreetmap.org`) — gratuites, libres, sans clé. Politique d'usage : ["moderate use" tolérée](https://operations.osmfoundation.org/policies/tiles/) (quelques milliers de requêtes par jour, OK pour le free tier Netlify).
@@ -141,6 +152,7 @@ Chacun fonctionne avec MapLibre via un simple changement d'URL de tuiles + ajout
   - [transport.data.gouv.fr (PAN)](https://transport.data.gouv.fr) — [Licence Ouverte 2.0](https://www.etalab.gouv.fr/licence-ouverte-open-licence)
   - [Open-Meteo](https://open-meteo.com) — [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
   - [Vigilance Météo-France](https://portail-api.meteofrance.fr) — Licence Ouverte 2.0
+  - [MapPatou — Pasto-Kezako / LESSEM (INRAE)](https://www.pasto-kezako.fr/mappatou-carte/) — **licence à confirmer** ; la couche reste désactivée en production tant que ce point n'est pas levé (voir [Zones pastorales](#zones-pastorales-chiens-de-protection))
 - **Fond de carte** : tuiles [OpenStreetMap](https://www.openstreetmap.org/copyright) (ODbL)
 
 Le GPX exporté liste dans `<copyright>` uniquement les sources réellement consultées, et chaque waypoint référence l'origine de la donnée. Le topo PDF reproduit la même attribution.

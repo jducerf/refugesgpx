@@ -34,7 +34,7 @@ Only two pages:
 
 ### State
 
-A single Zustand store, `src/store/useAppStore.ts`, owns: parsed GPX trace, buffer step index, enabled type sets (refuges.info vs annex sources), candidate POIs from each source, selection, per-source loading/error flags, and `detailOpenId`.
+A single Zustand store, `src/store/useAppStore.ts`, owns: parsed GPX trace, buffer step index, enabled type sets (refuges.info vs annex sources), candidate POIs from each source, selection, per-source loading/error flags, and `detailOpenId`. It also owns the pastoral overlay slice (`pastoralEnabled`, `pastoralDate`, `pastoralOnlyDogs`, `pastoralCount`, loading/error) — a separate concern from POIs (see *Pastoral overlay (MapPatou)*).
 
 Important invariant: `setCandidates` / `setAnnexCandidates` automatically prune `selectedIds` to the union of currently-visible POIs (`pruneSelection`). This prevents disabling a source from leaving selection ghosts in the export.
 
@@ -69,9 +69,22 @@ To keep IDs unique across sources (they collide otherwise), OSM ways are offset 
 
 Bumping `DB_VERSION` wipes the store on upgrade — do this if entry shapes change.
 
+MapPatou is the odd one out: it caches the whole national response keyed by **requested date** (not a bbox grid), with its own 7-day TTL defined in `src/lib/mappatou-api.ts` rather than via `TTL`.
+
 ### Map rendering
 
-`MapView.tsx` uses MapLibre with raw OSM raster tiles (`OSM_STYLE` constant — see README's "Fond de carte" section before swapping providers). POI layers use pre-rendered `icon-image` (from `lib/markers.ts`); no glyph PBF is loaded, so don't add `text-field` to a layer without also wiring up `glyphs`.
+`MapView.tsx` uses MapLibre with raw OSM raster tiles (`OSM_STYLE` constant — see README's "Fond de carte" section before swapping providers). POI layers use pre-rendered `icon-image` (from `lib/markers.ts`); no glyph PBF is loaded, so don't add `text-field` to a layer without also wiring up `glyphs`. The pastoral overlay adds its own `mappatou-fill` / `mappatou-line` polygon layers *beneath* the trace (see *Pastoral overlay (MapPatou)*).
+
+### Pastoral overlay (MapPatou)
+
+`src/lib/mappatou-api.ts` + dedicated `mappatou-fill` / `mappatou-line` layers in `MapView.tsx`. This is **not** a POI source — it's a MultiPolygon overlay (pastoral units + livestock-protection-dog presence; data: Pasto-Kezako / LESSEM-INRAE), entirely outside the candidates/selection/export pipeline, driven by its own store slice.
+
+Gotchas, all learned the hard way:
+
+- **The API filters by date server-side**, despite third-party docs claiming `date` is ignored. It always returns the ~5057 geometries, but `debut`/`fin`/`chiens`/`type_animal`/days are only populated for units grazed on the requested date (null otherwise). So we **fetch per `pastoralDate`** and re-fetch on change; the cache key is the date. A unit with null `debut`/`fin` is inactive that day → hidden.
+- Client-side filtering to the trace: numeric bbox prefilter (per-feature bbox precomputed once) → `isUpActiveOn` → `turf.booleanIntersects` against the trace buffer.
+- `surface` is **not** an area (it's a free string duplicating a zone name) — never display it.
+- **Feature-flagged off in production**: `PASTORAL_FEATURE_ENABLED` (`= import.meta.env.PUBLIC_PASTORAL_LAYER === 'true' || import.meta.env.DEV`) gates the source, layers, click handlers, attribution and fetch. On in dev, off in prod until the data license is confirmed (see *Conventions*). Enable in prod via Netlify env `PUBLIC_PASTORAL_LAYER=true` — no code change.
 
 ### Exports
 
@@ -83,4 +96,4 @@ Bumping `DB_VERSION` wipes the store on upgrade — do this if entry shapes chan
 - API responses are validated with **Zod** (`z.looseObject` everywhere) — keep schemas tolerant; the upstream APIs add fields without notice.
 - UI primitives in `src/components/ui/` are Radix wrappers (Button, Checkbox, Dialog, ScrollArea, Slider). Use `cn()` from `lib/cn.ts` (clsx + tailwind-merge) for class composition.
 - All user-facing strings are in French; keep that convention when adding UI.
-- Data licensing is non-negotiable: any new source must be CC BY-SA-compatible and have its attribution surfaced on the map, in the GPX `<copyright>`, and in the PDF (see `exports.ts` `sourcesLabel` logic).
+- Data licensing is non-negotiable: any new source must be CC BY-SA-compatible and have its attribution surfaced on the map, in the GPX `<copyright>`, and in the PDF (see `exports.ts` `sourcesLabel` logic). **Exception in flight**: the MapPatou pastoral overlay ships gated **off in production** (`PASTORAL_FEATURE_ENABLED`) precisely because its license is not yet confirmed CC BY-SA-compatible — don't enable it in prod until that's cleared (see *Pastoral overlay (MapPatou)*).
