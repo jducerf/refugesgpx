@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { ChevronDown, Info, Loader2, SlidersHorizontal } from 'lucide-react';
+import { ChevronDown, Dog, Info, Loader2, SlidersHorizontal } from 'lucide-react';
 import { Slider } from './ui/Slider';
 import { Checkbox } from './ui/Checkbox';
 import { TypeIcon } from './TypeIcon';
@@ -16,6 +16,7 @@ import {
   type DtGroup,
   type TypeKey,
 } from '@/lib/types';
+import { PASTORAL_FEATURE_ENABLED } from '@/lib/mappatou-api';
 import { cn } from '@/lib/cn';
 
 /** Étiquettes utilisateur pour chaque source individuelle. */
@@ -177,6 +178,18 @@ function SourcesInfo() {
             >
               transport.data.gouv.fr
             </a>
+          </p>
+          <p className="mt-1.5 text-[11px] leading-snug text-slate-700">
+            Zones pastorales :{' '}
+            <a
+              href="https://www.pasto-kezako.fr/mappatou-carte/"
+              target="_blank"
+              rel="noopener"
+              className="underline hover:text-[var(--color-accent)]"
+            >
+              Pasto-Kezako
+            </a>{' '}
+            / LESSEM (INRAE)
           </p>
           <p className="mt-1.5 text-[10px] italic leading-snug text-slate-500">
             Toujours vérifier sur le terrain : ouvertures, sources, accès et
@@ -412,6 +425,91 @@ function CategorySection({ cat }: { cat: Category }) {
   );
 }
 
+// ─── Zones pastorales (MapPatou) ────────────────────────────────
+// Couche overlay polygones, distincte du système de POI : toggle dédié,
+// sélecteur de date de rando (l'API filtre la période côté serveur) et option
+// « uniquement les zones avec chiens de protection ».
+function PastoralSection() {
+  const enabled = useAppStore((s) => s.pastoralEnabled);
+  const setEnabled = useAppStore((s) => s.setPastoralEnabled);
+  const date = useAppStore((s) => s.pastoralDate);
+  const setDate = useAppStore((s) => s.setPastoralDate);
+  const onlyDogs = useAppStore((s) => s.pastoralOnlyDogs);
+  const setOnlyDogs = useAppStore((s) => s.setPastoralOnlyDogs);
+  const count = useAppStore((s) => s.pastoralCount);
+  const loading = useAppStore((s) => s.isLoadingPastoral);
+  const error = useAppStore((s) => s.pastoralError);
+
+  return (
+    <div className="rounded border border-slate-100">
+      <label className="flex cursor-pointer items-center gap-2 px-2 py-1.5 transition-colors hover:bg-slate-50">
+        <Checkbox checked={enabled} onCheckedChange={(v) => setEnabled(v === true)} />
+        <Dog className="h-3.5 w-3.5 text-[#7c3aed]" />
+        <span className="text-xs font-semibold uppercase tracking-wider text-slate-700">
+          Zones pastorales
+        </span>
+        {loading && (
+          <Loader2 className="h-3 w-3 animate-spin text-slate-400" aria-label="Chargement" />
+        )}
+        {enabled && !loading && count > 0 && (
+          <span className="ml-auto rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold tabular-nums leading-none text-slate-700">
+            {count}
+          </span>
+        )}
+      </label>
+
+      {enabled && (
+        <div className="space-y-2 border-t border-slate-100 px-2.5 py-2">
+          <label className="block">
+            <span className="mb-0.5 block text-[11px] font-medium text-slate-600">
+              Date de la rando
+            </span>
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="w-full rounded border border-slate-200 px-2 py-1 text-sm text-slate-800 focus:border-[var(--color-accent)] focus:outline-none"
+            />
+          </label>
+
+          <label className="flex cursor-pointer items-center gap-2 rounded px-0.5 py-0.5 text-sm text-slate-600 hover:text-slate-900">
+            <Checkbox checked={onlyDogs} onCheckedChange={(v) => setOnlyDogs(v === true)} />
+            <span className="flex-1">Uniquement les zones avec chiens</span>
+          </label>
+
+          <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-slate-500">
+            <span className="flex items-center gap-1">
+              <span className="inline-block h-2 w-2 rounded-sm bg-[#7c3aed]" aria-hidden />
+              avec chiens (patou)
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="inline-block h-2 w-2 rounded-sm bg-[#f59e0b]" aria-hidden />
+              sans chiens
+            </span>
+          </div>
+
+          {error && (
+            <div className="rounded bg-red-50 px-1.5 py-1 text-[10px] text-red-700">{error}</div>
+          )}
+
+          <p className="text-[10px] leading-snug text-slate-400">
+            Données :{' '}
+            <a
+              href="https://www.pasto-kezako.fr/mappatou-carte/"
+              target="_blank"
+              rel="noopener"
+              className="underline hover:text-[var(--color-accent)]"
+            >
+              Pasto-Kezako
+            </a>{' '}
+            / LESSEM (INRAE). Présence indicative — restez prudent près des troupeaux.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Composant principal ───────────────────────────────────────
 
 export function Filters() {
@@ -465,6 +563,12 @@ export function Filters() {
         {annexError && (
           <div className="mt-2 rounded bg-red-50 px-1.5 py-1 text-[10px] text-red-700">
             {annexError}
+          </div>
+        )}
+
+        {PASTORAL_FEATURE_ENABLED && (
+          <div className="mt-1">
+            <PastoralSection />
           </div>
         )}
       </div>

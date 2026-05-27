@@ -1,6 +1,7 @@
 import * as React from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import * as turf from '@turf/turf';
 import type { FeatureCollection } from 'geojson';
 import { useAppStore } from '@/store/useAppStore';
 import {
@@ -10,6 +11,16 @@ import {
   traceBbox,
   traceToLine,
 } from '@/lib/geo';
+import {
+  fetchMapPatou,
+  isUpActiveOn,
+  animalLabel,
+  presentDaysSummary,
+  MAPPATOU_ATTRIBUTION,
+  PASTORAL_FEATURE_ENABLED,
+  type MapPatouFeature,
+  type MapPatouProperties,
+} from '@/lib/mappatou-api';
 import { fetchPOIsInBbox } from '@/lib/refuges-api';
 import { fetchWaterPointsOSM, fetchShopsOSM, fetchAmenitiesOSM } from '@/lib/overpass-api';
 import { fetchBivouacsC2C } from '@/lib/camptocamp-api';
@@ -93,6 +104,56 @@ async function registerAllMarkers(map: maplibregl.Map) {
 
 const EMPTY_FC: FeatureCollection = { type: 'FeatureCollection', features: [] };
 
+// ─── Zones pastorales (MapPatou) ──────────────────────────────────
+// Couleurs sémantiques : violet = présence de chiens de protection (alerte
+// forte pour le randonneur), ambre = zone pastorale standard.
+const PASTORAL_DOG_FILL = '#7c3aed';
+const PASTORAL_DOG_LINE = '#5b21b6';
+const PASTORAL_FILL = '#f59e0b';
+const PASTORAL_LINE = '#b45309';
+
+// Dernière FeatureCollection pastorale affichée. Conservée au niveau module
+// pour pouvoir la ré-appliquer après un `setStyle()` (qui vide les sources),
+// au même titre que `pushTraceFromStore` / `pushPoisFromStore`.
+let _lastPastoralData: FeatureCollection = EMPTY_FC;
+
+function pushMapPatouFromStore(map: maplibregl.Map) {
+  const src = map.getSource('mappatou') as maplibregl.GeoJSONSource | undefined;
+  if (!src) return;
+  src.setData(_lastPastoralData);
+}
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/** Contenu HTML du popup d'une UP. `surface` est volontairement ignoré
+ * (chaîne non exploitable comme superficie, cf. mappatou-api). */
+function buildPastoralPopup(raw: maplibregl.MapGeoJSONFeature['properties']): string {
+  const p = (raw ?? {}) as MapPatouProperties;
+  const nom = p.nom ? escapeHtml(String(p.nom)) : 'Unité pastorale';
+  const hasDogs = p.chiens === true || (p.chiens as unknown) === 'true';
+  const periode =
+    p.debut && p.fin ? `${escapeHtml(String(p.debut))} → ${escapeHtml(String(p.fin))}` : 'n/c';
+  const jours = escapeHtml(presentDaysSummary(p));
+  const dogLine = hasDogs
+    ? '<div style="margin-top:6px;padding:4px 6px;border-radius:4px;background:#f3e8ff;color:#6b21a8;font-weight:600;font-size:12px">⚠️ Chiens de protection (patous)</div>'
+    : '<div style="margin-top:6px;font-size:12px;color:#64748b">Pas de chiens de protection signalés</div>';
+  return (
+    `<div style="font-family:inherit;font-size:12px;line-height:1.45;color:#1e293b">` +
+    `<strong style="font-size:13px">${nom}</strong>` +
+    `<div style="margin-top:4px;color:#475569">Troupeau : ${escapeHtml(animalLabel(p.type_animal))}</div>` +
+    `<div style="color:#475569">Présence : ${periode}</div>` +
+    `<div style="color:#475569">Jours : ${jours}</div>` +
+    dogLine +
+    `</div>`
+  );
+}
+
 /**
  * Installe les sources/couches applicatives (`trace`, `pois`, halo) et déclenche
  * le chargement des markers SVG. À appeler à l'init **et** après chaque
@@ -103,6 +164,32 @@ const EMPTY_FC: FeatureCollection = { type: 'FeatureCollection', features: [] };
  * Les ré-attacher ici les ferait s'accumuler à chaque changement de fond.
  */
 function setupOverlays(map: maplibregl.Map, onMarkersReady: () => void) {
+  // Zones pastorales en premier → rendues SOUS la trace et les markers POI.
+  // `attribution` sur la source alimente le contrôle d'attribution MapLibre.
+  // Gated : en prod (licence non confirmée) on n'ajoute ni source, ni couches,
+  // ni attribution (cf. PASTORAL_FEATURE_ENABLED).
+  if (PASTORAL_FEATURE_ENABLED) {
+    map.addSource('mappatou', { type: 'geojson', data: _lastPastoralData, attribution: MAPPATOU_ATTRIBUTION });
+    map.addLayer({
+      id: 'mappatou-fill',
+      type: 'fill',
+      source: 'mappatou',
+      paint: {
+        'fill-color': ['case', ['==', ['get', 'chiens'], true], PASTORAL_DOG_FILL, PASTORAL_FILL],
+        'fill-opacity': 0.28,
+      },
+    });
+    map.addLayer({
+      id: 'mappatou-line',
+      type: 'line',
+      source: 'mappatou',
+      paint: {
+        'line-color': ['case', ['==', ['get', 'chiens'], true], PASTORAL_DOG_LINE, PASTORAL_LINE],
+        'line-width': 1.5,
+      },
+    });
+  }
+
   map.addSource('trace', { type: 'geojson', data: EMPTY_FC });
   map.addLayer({
     id: 'trace-buf',
@@ -178,6 +265,24 @@ export function MapView() {
   const selectedIds = useAppStore((s) => s.selectedIds);
   const openDetail = useAppStore((s) => s.openDetail);
   const basemap = useAppStore((s) => s.basemap);
+  const pastoralEnabled = useAppStore((s) => s.pastoralEnabled);
+  const pastoralDate = useAppStore((s) => s.pastoralDate);
+  const pastoralOnlyDogs = useAppStore((s) => s.pastoralOnlyDogs);
+  const setPastoralCount = useAppStore((s) => s.setPastoralCount);
+  const setPastoralLoading = useAppStore((s) => s.setPastoralLoading);
+  const setPastoralError = useAppStore((s) => s.setPastoralError);
+
+  // Jeu MapPatou chargé pour une date donnée (l'API filtre la période côté
+  // serveur). `date` étiquette le contenu pour distinguer données fraîches /
+  // périmées après un changement de date. `bboxes` pré-calculées pour le
+  // pré-filtrage rapide. `pastoralVersion` déclenche le recalcul du rendu
+  // après chaque fetch.
+  const pastoralRawRef = React.useRef<{
+    date: string;
+    features: MapPatouFeature[];
+    bboxes: [number, number, number, number][];
+  } | null>(null);
+  const [pastoralVersion, setPastoralVersion] = React.useState(0);
 
   // Évite un swap inutile au tout premier rendu : la map est déjà initialisée
   // avec le style courant du store.
@@ -214,6 +319,20 @@ export function MapView() {
     });
     map.on('mouseenter', 'pois', () => (map.getCanvas().style.cursor = 'pointer'));
     map.on('mouseleave', 'pois', () => (map.getCanvas().style.cursor = ''));
+
+    // Popup d'une zone pastorale (gated avec la couche, cf. PASTORAL_FEATURE_ENABLED).
+    if (PASTORAL_FEATURE_ENABLED) {
+      map.on('click', 'mappatou-fill', (e) => {
+        const f = e.features?.[0];
+        if (!f) return;
+        new maplibregl.Popup({ closeButton: true, maxWidth: '260px' })
+          .setLngLat(e.lngLat)
+          .setHTML(buildPastoralPopup(f.properties))
+          .addTo(map);
+      });
+      map.on('mouseenter', 'mappatou-fill', () => (map.getCanvas().style.cursor = 'pointer'));
+      map.on('mouseleave', 'mappatou-fill', () => (map.getCanvas().style.cursor = ''));
+    }
 
     map.on('load', () => {
       setupOverlays(map, () => setMarkersReady(true));
@@ -270,6 +389,7 @@ export function MapView() {
         pushPoisFromStore(map);
       });
       pushTraceFromStore(map);
+      pushMapPatouFromStore(map);
     });
   }, [basemap]);
 
@@ -479,6 +599,96 @@ export function MapView() {
     setAnnexCandidates,
     setAnnexLoading,
     setAnnexError,
+  ]);
+
+  // ─── Fetch MapPatou (par date — l'API filtre la période d'estive) ─
+  // Fetch à l'activation de la couche + en présence d'une trace, puis à chaque
+  // changement de date. Mémo module + cache IndexedDB (clé = date) → re-sélection
+  // d'une date déjà vue instantanée.
+  React.useEffect(() => {
+    if (!PASTORAL_FEATURE_ENABLED || !pastoralEnabled || !trace) return;
+    const date = pastoralDate;
+    // Déjà en mémoire pour cette date → forcer un recalcul du rendu.
+    if (pastoralRawRef.current?.date === date) {
+      setPastoralVersion((v) => v + 1);
+      return;
+    }
+    const ctrl = new AbortController();
+    setPastoralLoading(true);
+    setPastoralError(null);
+    fetchMapPatou(date, ctrl.signal)
+      .then((fc) => {
+        const features = (fc.features ?? []) as MapPatouFeature[];
+        // bbox par feature : pré-filtre numérique rapide avant le test
+        // d'intersection géométrique (coûteux).
+        const bboxes = features.map(
+          (f) => turf.bbox(f) as [number, number, number, number],
+        );
+        pastoralRawRef.current = { date, features, bboxes };
+        setPastoralVersion((v) => v + 1);
+      })
+      .catch((e) => {
+        if ((e as Error).name !== 'AbortError') {
+          setPastoralError(e instanceof Error ? e.message : 'Erreur zones pastorales');
+        }
+      })
+      .finally(() => setPastoralLoading(false));
+    return () => ctrl.abort();
+  }, [pastoralEnabled, trace, pastoralDate, setPastoralLoading, setPastoralError]);
+
+  // ─── Filtre + rendu de la couche pastorale ──────────────────────
+  // Pré-filtre bbox numérique (rapide sur ~5000 UP) → date/chiens →
+  // intersection géométrique précise avec le buffer du tracé.
+  React.useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const src = map.getSource('mappatou') as maplibregl.GeoJSONSource | undefined;
+    if (!src) return;
+
+    const raw = pastoralRawRef.current;
+    // On n'affiche que si les données en mémoire correspondent à la date courante
+    // (sinon : couche off, pas de trace, ou fetch d'une nouvelle date en cours).
+    if (!pastoralEnabled || !trace || !raw || raw.date !== pastoralDate) {
+      _lastPastoralData = EMPTY_FC;
+      src.setData(EMPTY_FC);
+      setPastoralCount(0);
+      return;
+    }
+
+    const bufferM = BUFFER_STEPS[bufferStepIdx]?.meters ?? 500;
+    const tb = expandBboxMeters(traceBbox(trace), bufferM);
+    const buffer = bufferLine(traceToLine(trace), bufferM);
+    const { features, bboxes } = raw;
+
+    const out: MapPatouFeature[] = [];
+    for (let i = 0; i < features.length; i++) {
+      const b = bboxes[i];
+      if (!b) continue;
+      // Pré-filtre bbox : rejette tout ce qui ne chevauche pas la bbox du tracé.
+      if (b[2] < tb[0] || b[0] > tb[2] || b[3] < tb[1] || b[1] > tb[3]) continue;
+      const f = features[i];
+      if (!f) continue;
+      const p = f.properties;
+      if (pastoralOnlyDogs && p.chiens !== true) continue;
+      if (!isUpActiveOn(p, pastoralDate)) continue;
+      // Test géométrique précis en dernier (sur le petit reliquat post-bbox).
+      if (!turf.booleanIntersects(f, buffer)) continue;
+      out.push(f);
+    }
+
+    const fc: FeatureCollection = { type: 'FeatureCollection', features: out };
+    _lastPastoralData = fc;
+    src.setData(fc);
+    setPastoralCount(out.length);
+    map.triggerRepaint();
+  }, [
+    pastoralEnabled,
+    pastoralVersion,
+    pastoralDate,
+    pastoralOnlyDogs,
+    trace,
+    bufferStepIdx,
+    setPastoralCount,
   ]);
 
   // ─── Update POIs layer ──────────────────────────────────────────

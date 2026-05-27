@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { DtGroup, ParsedGpx, PoiCandidate, TypeKey } from '@/lib/types';
 import { DT_GROUP_ORDER, REFUGES_TYPE_KEYS } from '@/lib/types';
 import { BASEMAPS, DEFAULT_BASEMAP, type BasemapId } from '@/lib/basemaps';
+import { localTodayISO } from '@/lib/mappatou-api';
 
 const BASEMAP_STORAGE_KEY = 'refuges-basemap';
 
@@ -41,6 +42,16 @@ interface AppState {
   detailOpenId: number | null;
   basemap: BasemapId;
 
+  // ─── Zones pastorales (MapPatou) — couche overlay polygones, indépendante
+  // du pipeline POI/sélection/export. Donnée fetchée par date (l'API filtre la
+  // période d'estive côté serveur) puis filtrée par bbox de la trace.
+  pastoralEnabled: boolean;
+  pastoralDate: string; // YYYY-MM-DD — date de rando pour le filtre temporel
+  pastoralOnlyDogs: boolean; // n'afficher que les UP avec chiens de protection
+  pastoralCount: number; // nb d'UP visibles (après filtres) — pour l'UI
+  isLoadingPastoral: boolean;
+  pastoralError: string | null;
+
   setTrace: (t: ParsedGpx | null) => void;
   setBufferStepIdx: (i: number) => void;
   toggleType: (k: TypeKey) => void;
@@ -60,6 +71,12 @@ interface AppState {
   setAnnexError: (e: string | null) => void;
   openDetail: (id: number | null) => void;
   setBasemap: (id: BasemapId) => void;
+  setPastoralEnabled: (b: boolean) => void;
+  setPastoralDate: (d: string) => void;
+  setPastoralOnlyDogs: (b: boolean) => void;
+  setPastoralCount: (n: number) => void;
+  setPastoralLoading: (b: boolean) => void;
+  setPastoralError: (e: string | null) => void;
   reset: () => void;
 }
 
@@ -96,6 +113,12 @@ export const useAppStore = create<AppState>((set) => ({
   annexError: null,
   detailOpenId: null,
   basemap: readStoredBasemap(),
+  pastoralEnabled: false,
+  pastoralDate: localTodayISO(),
+  pastoralOnlyDogs: false,
+  pastoralCount: 0,
+  isLoadingPastoral: false,
+  pastoralError: null,
 
   setTrace: (t) =>
     set({
@@ -179,6 +202,17 @@ export const useAppStore = create<AppState>((set) => ({
     writeStoredBasemap(id);
     set({ basemap: id });
   },
+  setPastoralEnabled: (b) =>
+    set(
+      b
+        ? { pastoralEnabled: true }
+        : { pastoralEnabled: false, pastoralError: null, pastoralCount: 0 },
+    ),
+  setPastoralDate: (d) => set({ pastoralDate: d }),
+  setPastoralOnlyDogs: (b) => set({ pastoralOnlyDogs: b }),
+  setPastoralCount: (n) => set({ pastoralCount: n }),
+  setPastoralLoading: (b) => set({ isLoadingPastoral: b }),
+  setPastoralError: (e) => set({ pastoralError: e }),
   reset: () =>
     set({
       trace: null,
@@ -191,5 +225,9 @@ export const useAppStore = create<AppState>((set) => ({
       enabledTypes: new Set<TypeKey>(REFUGES_TYPE_KEYS.filter((t) => t !== 'pt_passage')),
       enabledAnnexTypes: new Set<TypeKey>(),
       enabledDtGroups: new Set<DtGroup>(DT_GROUP_ORDER),
+      pastoralEnabled: false,
+      pastoralOnlyDogs: false,
+      pastoralCount: 0,
+      pastoralError: null,
     }),
 }));
